@@ -4,21 +4,21 @@
    "content":{
       "metaDataVersion":"1.3.0",
       "name":"com.microchip.mplabx.project.mclv48v300w-33ak128mc106-pmsm-an1299-foc-pll",
-      "version":"1.0.0",
-      "displayName":"AN1299 dsPIC33AK128MC106 MCLV-48V-300W",
+      "version":"2.0.0",
+      "displayName":"AN1299 Sensorless FOC of PMSM using PLL Estimator and Single-Shunt Current Reconstruction Algorithm: MCLV-48V-300W and dsPIC33AK128MC106 MC DIM",
       "projectName":"mclv48v300w-33ak128mc106-pmsm-an1299-foc-pll",
-      "shortDescription":"Sensorless Field Oriented Control of a PMSM with PLL Estimator and Single-Shunt Current Reconstruction Algorithm",
+      "shortDescription":"Sensorless Field Oriented Control of PMSM using back-EMF based PLL estimator and Single-Shunt Current Reconstruction Algorithm(AN1299)",
       "ide":{
          "name":"MPLABX",
-         "semverRange":">=6.20"
+         "semverRange":">=6.25"
       },
       "compiler":{
          "name":"XC-DSC",
-         "semverRange":">=3.10"
+         "semverRange":">=3.21"
       },
       "dfp":{
          "name":"dsPIC33AK-MC_DFP",
-         "semverRange":"=1.0.33"
+         "semverRange":"=1.1.109"
       },
 	  "configurator": {
          "name": "MCC",
@@ -34,15 +34,18 @@
             "versionRange":"*"
          }
       },
-	  "peripherals":[
-         "ADC",
-		 "PWM"
-      ],
       "keywords":[
-         "Motor Control",
+         "ADC",
+         "PWM",
+         "OPAMP",
+         "CMP",
+         "DAC",
+         "Motor Control Algorithm",
          "PMSM",
          "Sensorless Control",
+         "PLL Estimator",
          "FOC",
+         "Field Weakening",
          "dsPIC"
       ]
    }
