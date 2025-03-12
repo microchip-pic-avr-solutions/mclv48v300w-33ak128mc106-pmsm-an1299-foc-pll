@@ -52,7 +52,6 @@
 #include <stdint.h>
 
 #include "pwm.h"
-#include "userparms.h"
 
 // </editor-fold>
 
@@ -98,19 +97,19 @@ void InitPWMGenerators(void)
     FSMINPER     = 0x0000;
     /* Initialize Linear Feedback Shift Register */
     LFSR         = 0x0000;
-    /* Initialize Combinational Trigger Register Low */
+    /* Initialize Combinational Trigger Register */
     CMBTRIG     = 0x0000;
-    /* Initialize LOGIC CONTROL REGISTER 1 LOW */
+    /* Initialize LOGIC CONTROL REGISTER 1 */
     LOGCONA     = 0x0000;
-    /* Initialize LOGIC CONTROL REGISTER 1 HIGH */
+    /* Initialize LOGIC CONTROL REGISTER 1 */
     LOGCONB     = 0x0000;
-    /* Initialize LOGIC CONTROL REGISTER 2 LOW */
+    /* Initialize LOGIC CONTROL REGISTER 2 */
     LOGCONC     = 0x0000;
-    /* Initialize LOGIC CONTROL REGISTER 2 HIGH */
+    /* Initialize LOGIC CONTROL REGISTER 2 */
     LOGCOND     = 0x0000;
-    /* Initialize LOGIC CONTROL REGISTER 3 LOW */
+    /* Initialize LOGIC CONTROL REGISTER 3 */
     LOGCONE     = 0x0000;
-    /* Initialize LOGIC CONTROL REGISTER 3 High */
+    /* Initialize LOGIC CONTROL REGISTER 3 */
     LOGCONF     = 0x0000;
     /* PWM EVENT OUTPUT CONTROL REGISTER A */
     PWMEVTA     = 0x0000;     
@@ -145,6 +144,7 @@ void InitPWMGenerators(void)
     /* Function call to charge Bootstrap capacitors*/
     ChargeBootstrapCapacitors();
 }
+
 /**
 * <B> Function: InitDutyPWM123Generators()    </B>
 *
@@ -190,6 +190,7 @@ void InitDutyPWM123Generators(void)
     PG1DC = 0;
 
 }
+
 /**
 * <B> Function: ChargeBootstrapCapacitors()    </B>
 *
@@ -205,7 +206,7 @@ void InitDutyPWM123Generators(void)
 void ChargeBootstrapCapacitors(void)
 {
     uint32_t i = BOOTSTRAP_CHARGING_COUNTS;
-    uint16_t prevStatusCAHALF = 0,currStatusCAHALF = 0;
+    uint8_t prevStatusCAHALF = 0,currStatusCAHALF = 0;
 
     /* Enable PWMs only on PWMxL ,to charge bootstrap capacitors at the beginning
      * Hence PWMxH is over-ridden to "LOW" */
@@ -267,6 +268,7 @@ void ChargeBootstrapCapacitors(void)
     PG1IOCONbits.OVRENH = 0;   
      
 }
+
 /**
 * <B> Function: InitPWMGenerator1()    </B>
 *
@@ -282,7 +284,7 @@ void ChargeBootstrapCapacitors(void)
 void InitPWMGenerator1 (void)
 {
 
-    /* Initialize PWM GENERATOR 1 CONTROL REGISTER LOW */
+    /* Initialize PWM GENERATOR 1 CONTROL REGISTER */
     PG1CON      = 0x0000;
     /* PWM Generator 1 Enable bit : 1 = Is enabled, 0 = Is not enabled */
     /* Ensuring PWM Generator is disabled prior to configuring module */
@@ -302,7 +304,7 @@ void InitPWMGenerator1 (void)
        000 = PWM Generator produces 1 PWM cycle after triggered */
     PG1CONbits.TRGCNT = 0;
     
-    /* Initialize PWM GENERATOR 1 CONTROL REGISTER HIGH */
+    /* Initialize PWM GENERATOR 1 CONTROL REGISTER */
     /* Master Duty Cycle Register Select bit
        1 = Macro uses the MDC register instead of PG1DC
        0 = Macro uses the PG1DC register*/
@@ -332,7 +334,7 @@ void InitPWMGenerator1 (void)
     
     /* Clear PWM GENERATOR 1 STATUS REGISTER*/
     PG1STAT      = 0x0000;
-    /* Initialize PWM GENERATOR 1 I/O CONTROL REGISTER LOW */
+    /* Initialize PWM GENERATOR 1 I/O CONTROL REGISTER */
     PG1IOCON    = 0x0000;
 
     /* Current Limit Mode Select bit
@@ -373,7 +375,7 @@ void InitPWMGenerator1 (void)
        If Debug mode is active and PTFRZ=1,then DBDAT<0> provides PWM1L data. */
     PG1IOCONbits.DBDAT = 0;
     
-    /* Initialize PWM GENERATOR 1 I/O CONTROL REGISTER HIGH */    
+    /* Initialize PWM GENERATOR 1 I/O CONTROL REGISTER */    
 
     /* Time Base Capture Source Selection bits
        000 = No hardware source selected for time base capture ? software only*/
@@ -401,7 +403,7 @@ void InitPWMGenerator1 (void)
        0 = Output pin is active-high*/
     PG1IOCONbits.POLL = 0;
     
-    /* Initialize PWM GENERATOR 1 EVENT REGISTER LOW*/
+    /* Initialize PWM GENERATOR 1 EVENT REGISTER */
     PG1EVT      = 0x0000;
     /* ADC Trigger 1 Post-scaler Selection bits
        00000 = 1:1 */
@@ -425,7 +427,7 @@ void InitPWMGenerator1 (void)
        000 = EOC event is the PWM Generator trigger*/
     PG1EVTbits.PGTRGSEL = 0;
     
-    /* Initialize PWM GENERATOR 1 EVENT REGISTER HIGH */
+    /* Initialize PWM GENERATOR 1 EVENT REGISTER */
     /* FLTIEN: PCI Fault Interrupt Enable bit
        1 = Fault interrupt is enabled */
     PG1EVTbits.FLTIEN = 1;
@@ -461,11 +463,11 @@ void InitPWMGenerator1 (void)
        00000 = No offset */
     PG1EVTbits.ADTR1OFS = 0;
     
-#ifndef ENABLE_PWM_FAULT
-    /* PWM GENERATOR 1 Fault PCI REGISTER LOW */
+#ifndef ENABLE_PWM_FAULT_PCI
+    /* PWM GENERATOR 1 Fault PCI REGISTER */
     PG1FPCI     = 0x0000;
 #else
-       /* PWM GENERATOR 1 Fault PCI REGISTER LOW */
+       /* PWM GENERATOR 1 Fault PCI REGISTER */
     PG1FPCI     = 0x0000;
     /* Termination Synchronization Disable bit
        1 = Termination of latched PCI occurs immediately
@@ -494,11 +496,15 @@ void InitPWMGenerator1 (void)
     /* PCI Polarity Select bit 0 = Not inverted 1 = Inverted */
     PG1FPCIbits.PPS = 1;
     /* PCI Source Selection bits
-       11111 = PCI Source #31
+       11111 = CLC1
        ? ?
-       00001 = PCI Source #1
-       00000 = Software PCI control bit (SWPCI) only*/
-    PG1FPCIbits.PSS = 9;
+       11101 Comparator 3 output
+       ? ?
+       01000 RPn input, PCI8R
+       ? ?
+       00001 = Internally connected to the output of PWMPCI[2:0] MUX
+       00000 = Tied to ?0? */
+    PG1FPCIbits.PSS = 0b11101;
     /* PCI Bypass Enable bit
        0 = PCI function is not bypassed */
     PG1FPCIbits.BPEN   = 0;
@@ -531,40 +537,42 @@ void InitPWMGenerator1 (void)
        010 = LEB is active
        001 = Duty cycle is active (base PWM Generator signal)
        000 = No termination qualifier used (qualifier forced to '1')(3)*/
-    PG1FPCIbits.TQSS  = 3;
+    PG1FPCIbits.TQSS  = 0;
 #endif    
 
-    /* PWM GENERATOR 1 Current Limit PCI REGISTER LOW */
+    /* PWM GENERATOR 1 Current Limit PCI REGISTER */
     PG1CLPCI    = 0x0000;
-    /* PWM GENERATOR 1 Feed Forward PCI REGISTER LOW */
+    /* PWM GENERATOR 1 Feed Forward PCI REGISTER  */
     PG1FFPCI    = 0x0000;
-    /* PWM GENERATOR 1 Sync PCI REGISTER LOW */
+    /* PWM GENERATOR 1 Sync PCI REGISTER */
     PG1SPCI     = 0x0000;
     
-    /* Initialize PWM GENERATOR 1 LEADING-EDGE BLANKING REGISTER LOW */
+    /* Initialize PWM GENERATOR 1 LEADING-EDGE BLANKING REGISTER */
     PG1LEB      = 0x0000;
     
     /* Initialize PWM GENERATOR 1 PHASE REGISTER */
-    PG1PHASE     = MIN_DUTY;
+    PG1PHASEbits.PHASE     = MIN_DUTY;
     /* Initialize PWM GENERATOR 1 DUTY CYCLE REGISTER */
-    PG1DC        = MIN_DUTY;
+    PG1DCbits.DC           = MIN_DUTY;
     /* Initialize PWM GENERATOR 1 DUTY CYCLE ADJUSTMENT REGISTER */
     PG1DCA       = 0x0000;
     /* Initialize PWM GENERATOR 1 PERIOD REGISTER */
     PG1PER       = 0x0000;
-    /* Initialize PWM GENERATOR 1 DEAD-TIME REGISTER LOW */
-    PG1DTbits.DTH       = DEADTIME;
-    /* Initialize PWM GENERATOR 1 DEAD-TIME REGISTER HIGH */
-    PG1DTbits.DTL      = DEADTIME;
+    /* Initialize PWM GENERATOR 1 DEAD-TIME REGISTER */
+    PG1DTbits.DTH = DEADTIME;
+    /* Initialize PWM GENERATOR 1 DEAD-TIME REGISTER */
+    PG1DTbits.DTL = DEADTIME;
 
     /* Initialize PWM GENERATOR 1 TRIGGER A REGISTER */
-    PG1TRIGA     = ADC_SAMPLING_POINT;
+    PG1TRIGAbits.CAHALF = 0;
+    PG1TRIGAbits.TRIGA  = ADC_SAMPLING_POINT;
     /* Initialize PWM GENERATOR 1 TRIGGER B REGISTER */
     PG1TRIGB     = 0x0000;
     /* Initialize PWM GENERATOR 1 TRIGGER C REGISTER */
     PG1TRIGC     = 0x0000;
     
 } 
+
 /**
 * <B> Function: InitPWMGenerator2()    </B>
 *
@@ -580,7 +588,7 @@ void InitPWMGenerator1 (void)
 void InitPWMGenerator2 (void)
 {
 
-    /* Initialize PWM GENERATOR 2 CONTROL REGISTER LOW */
+    /* Initialize PWM GENERATOR 2 CONTROL REGISTER */
     PG2CON      = 0x0000;
     /* PWM Generator 2 Enable bit : 1 = Is enabled, 0 = Is not enabled */
     /* PWM Generator is disabled prior to configuring module */
@@ -600,7 +608,7 @@ void InitPWMGenerator2 (void)
        000 = PWM Generator produces 1 PWM cycle after triggered */
     PG2CONbits.TRGCNT = 0;
     
-    /* Initialize PWM GENERATOR 2 CONTROL REGISTER HIGH */
+    /* Initialize PWM GENERATOR 2 CONTROL REGISTER */
     /* Master Duty Cycle Register Select bit
        1 = Macro uses the MDC register instead of PG2DC
        0 = Macro uses the PG2DC register*/
@@ -633,7 +641,7 @@ void InitPWMGenerator2 (void)
     
     /* Clear PWM GENERATOR 2 STATUS REGISTER*/
     PG2STAT      = 0x0000;
-    /* Initialize PWM GENERATOR 2 I/O CONTROL REGISTER LOW */
+    /* Initialize PWM GENERATOR 2 I/O CONTROL REGISTER */
     PG2IOCON    = 0x0000;
 
     /* Current Limit Mode Select bit
@@ -674,7 +682,7 @@ void InitPWMGenerator2 (void)
        If Debug mode is active and PTFRZ=1,then DBDAT<0> provides PWM2L data. */
     PG2IOCONbits.DBDAT = 0;
     
-    /* Initialize PWM GENERATOR 2 I/O CONTROL REGISTER HIGH */    
+    /* Initialize PWM GENERATOR 2 I/O CONTROL REGISTER */    
     /* Time Base Capture Source Selection bits
        000 = No hardware source selected for time base capture ? software only*/
     PG2IOCONbits.CAPSRC = 0;
@@ -701,7 +709,7 @@ void InitPWMGenerator2 (void)
        0 = Output pin is active-high*/
     PG2IOCONbits.POLL = 0;
     
-    /* Initialize PWM GENERATOR 2 EVENT REGISTER LOW*/
+    /* Initialize PWM GENERATOR 2 EVENT REGISTER */
     PG2EVT      = 0x0000;
     /* ADC Trigger 1 Post-scaler Selection bits
        00000 = 1:1 */
@@ -733,7 +741,7 @@ void InitPWMGenerator2 (void)
        000 = EOC event is the PWM Generator trigger*/
     PG2EVTbits.PGTRGSEL = 0;
     
-    /* Initialize PWM GENERATOR 2 EVENT REGISTER HIGH */
+    /* Initialize PWM GENERATOR 2 EVENT REGISTER */
     /* FLTIEN: PCI Fault Interrupt Enable bit
        0 = Fault interrupt is disabled */
     PG2EVTbits.FLTIEN = 0;
@@ -775,11 +783,11 @@ void InitPWMGenerator2 (void)
        00000 = No offset */
     PG2EVTbits.ADTR1OFS = 0;
     
-#ifndef ENABLE_PWM_FAULT
-    /* PWM GENERATOR 2 Fault PCI REGISTER LOW */
+#ifndef ENABLE_PWM_FAULT_PCI
+    /* PWM GENERATOR 2 Fault PCI REGISTER */
     PG2FPCI     = 0x0000;
 #else
-       /* PWM GENERATOR 2 Fault PCI REGISTER LOW */
+       /* PWM GENERATOR 2 Fault PCI REGISTER */
     PG2FPCI     = 0x0000;
     /* Termination Synchronization Disable bit
        1 = Termination of latched PCI occurs immediately
@@ -808,11 +816,15 @@ void InitPWMGenerator2 (void)
     /* PCI Polarity Select bit 0 = Not inverted 1 = Inverted */
     PG2FPCIbits.PPS = 1;
     /* PCI Source Selection bits
-       11111 = PCI Source #31
+       11111 = CLC1
        ? ?
-       00001 = PCI Source #1
-       00000 = Software PCI control bit (SWPCI) only*/
-    PG2FPCIbits.PSS = 9;
+       11101 Comparator 3 output
+       ? ?
+       01000 RPn input, PCI8R
+       ? ?
+       00001 = Internally connected to the output of PWMPCI[2:0] MUX
+       00000 = Tied to ?0? */
+    PG2FPCIbits.PSS = 0b11101;
     /* PCI Bypass Enable bit
        0 = PCI function is not bypassed */
     PG2FPCIbits.BPEN   = 0;
@@ -845,40 +857,43 @@ void InitPWMGenerator2 (void)
        010 = LEB is active
        001 = Duty cycle is active (base PWM Generator signal)
        000 = No termination qualifier used (qualifier forced to '1')(3)*/
-    PG2FPCIbits.TQSS  = 3;
+    PG2FPCIbits.TQSS  = 0;
 #endif  
     
-    /* PWM GENERATOR 2 Current Limit PCI REGISTER LOW */
+    /* PWM GENERATOR 2 Current Limit PCI REGISTER */
     PG2CLPCI    = 0x0000;
-    /* PWM GENERATOR 2 Feed Forward PCI REGISTER LOW */
+    /* PWM GENERATOR 2 Feed Forward PCI REGISTER */
     PG2FFPCI    = 0x0000;
-    /* PWM GENERATOR 2 Sync PCI REGISTER LOW */
+    /* PWM GENERATOR 2 Sync PCI REGISTER */
     PG2SPCI     = 0x0000;
     
-    /* Initialize PWM GENERATOR 2 LEADING-EDGE BLANKING REGISTER LOW */
+    /* Initialize PWM GENERATOR 2 LEADING-EDGE BLANKING REGISTER */
     PG2LEB      = 0x0000;
     
     /* Initialize PWM GENERATOR 2 PHASE REGISTER */
-    PG2PHASE     = MIN_DUTY;
+    PG2PHASEbits.PHASE     = MIN_DUTY;
     /* Initialize PWM GENERATOR 2 DUTY CYCLE REGISTER */
-    PG2DC        = MIN_DUTY;
+    PG2DCbits.DC           = MIN_DUTY;
     /* Initialize PWM GENERATOR 2 DUTY CYCLE ADJUSTMENT REGISTER */
     PG2DCA       = 0x0000;
     /* Initialize PWM GENERATOR 2 PERIOD REGISTER */
     PG2PER       = 0x0000;
-    /* Initialize PWM GENERATOR 2 DEAD-TIME REGISTER LOW */
-    PG2DTbits.DTH       = DEADTIME;
-    /* Initialize PWM GENERATOR 2 DEAD-TIME REGISTER HIGH */
-    PG2DTbits.DTL       = DEADTIME;
+    /* Initialize PWM GENERATOR 2 DEAD-TIME REGISTER */
+    PG2DTbits.DTH = DEADTIME;
+    /* Initialize PWM GENERATOR 2 DEAD-TIME REGISTER */
+    PG2DTbits.DTL = DEADTIME;
 
     /* Initialize PWM GENERATOR 2 TRIGGER A REGISTER */
     PG2TRIGA     = 0x0000;
     /* Initialize PWM GENERATOR 2 TRIGGER B REGISTER */
-    PG2TRIGB     = LOOPTIME_TCY>>2;
+    PG2TRIGBbits.CAHALF = 0;
+    PG2TRIGBbits.TRIGB  = LOOPTIME_TCY/4;
     /* Initialize PWM GENERATOR 2 TRIGGER C REGISTER */
-    PG2TRIGC     = LOOPTIME_TCY>>1;
+    PG2TRIGCbits.CAHALF = 0;
+    PG2TRIGCbits.TRIGC  = LOOPTIME_TCY/2;
     
 }
+
 /**
 * <B> Function: InitPWMGenerator3()    </B>
 *
@@ -894,7 +909,7 @@ void InitPWMGenerator2 (void)
 void InitPWMGenerator3 (void)
 {
 
-    /* Initialize PWM GENERATOR 3 CONTROL REGISTER LOW */
+    /* Initialize PWM GENERATOR 3 CONTROL REGISTER */
     PG3CON      = 0x0000;
     /* PWM Generator 3 Enable bit : 1 = Is enabled, 0 = Is not enabled */
     /* PWM Generator is disabled prior to configuring module */
@@ -914,7 +929,7 @@ void InitPWMGenerator3 (void)
        000 = PWM Generator produces 1 PWM cycle after triggered */
     PG3CONbits.TRGCNT = 0;
     
-    /* Initialize PWM GENERATOR 3 CONTROL REGISTER HIGH */
+    /* Initialize PWM GENERATOR 3 CONTROL REGISTER */
     /* Master Duty Cycle Register Select bit
        1 = Macro uses the MDC register instead of PG3DC
        0 = Macro uses the PG3DC register*/
@@ -947,7 +962,7 @@ void InitPWMGenerator3 (void)
     
     /* Clear PWM GENERATOR 3 STATUS REGISTER*/
     PG3STAT      = 0x0000;
-    /* Initialize PWM GENERATOR 3 I/O CONTROL REGISTER LOW */
+    /* Initialize PWM GENERATOR 3 I/O CONTROL REGISTER */
     PG3IOCON    = 0x0000;
 
     /* Current Limit Mode Select bit
@@ -988,7 +1003,7 @@ void InitPWMGenerator3 (void)
        If Debug mode is active and PTFRZ=1,then DBDAT<0> provides PWM3L data. */
     PG3IOCONbits.DBDAT = 0;
     
-    /* Initialize PWM GENERATOR 3 I/O CONTROL REGISTER HIGH */    
+    /* Initialize PWM GENERATOR 3 I/O CONTROL REGISTER */    
     /* Time Base Capture Source Selection bits
        000 = No hardware source selected for time base capture ? software only*/
     PG3IOCONbits.CAPSRC = 0;
@@ -1015,7 +1030,7 @@ void InitPWMGenerator3 (void)
        0 = Output pin is active-high*/
     PG3IOCONbits.POLL = 0;
     
-    /* Initialize PWM GENERATOR 3 EVENT REGISTER LOW*/
+    /* Initialize PWM GENERATOR 3 EVENT REGISTER */
     PG3EVT      = 0x0000;
     /* ADC Trigger 1 Post-scaler Selection bits
        00000 = 1:1 */
@@ -1040,7 +1055,7 @@ void InitPWMGenerator3 (void)
        000 = EOC event is the PWM Generator trigger*/
     PG3EVTbits.PGTRGSEL = 0;
     
-    /* Initialize PWM GENERATOR 3 EVENT REGISTER HIGH */
+    /* Initialize PWM GENERATOR 3 EVENT REGISTER */
     /* FLTIEN: PCI Fault Interrupt Enable bit
        0 = Fault interrupt is disabled */
     PG3EVTbits.FLTIEN = 0;
@@ -1075,12 +1090,12 @@ void InitPWMGenerator3 (void)
        00000 = No offset */
     PG3EVTbits.ADTR1OFS = 0;
     
-    /* PWM GENERATOR 3 Fault PCI REGISTER LOW */
-#ifndef ENABLE_PWM_FAULT
-    /* PWM GENERATOR 3 Fault PCI REGISTER LOW */
+    /* PWM GENERATOR 3 Fault PCI REGISTER */
+#ifndef ENABLE_PWM_FAULT_PCI
+    /* PWM GENERATOR 3 Fault PCI REGISTER */
     PG3FPCI     = 0x0000;
 #else
-       /* PWM GENERATOR 3 Fault PCI REGISTER LOW */
+       /* PWM GENERATOR 3 Fault PCI REGISTER  */
     PG3FPCI     = 0x0000;
     /* Termination Synchronization Disable bit
        1 = Termination of latched PCI occurs immediately
@@ -1109,11 +1124,15 @@ void InitPWMGenerator3 (void)
     /* PCI Polarity Select bit 0 = Not inverted 1 = Inverted */
     PG3FPCIbits.PPS = 1;
     /* PCI Source Selection bits
-       11111 = PCI Source #31
+       11111 = CLC1
        ? ?
-       00001 = PCI Source #1
-       00000 = Software PCI control bit (SWPCI) only*/
-    PG3FPCIbits.PSS = 9;
+       11101 Comparator 3 output
+       ? ?
+       01000 RPn input, PCI8R
+       ? ?
+       00001 = Internally connected to the output of PWMPCI[2:0] MUX
+       00000 = Tied to ?0? */
+    PG3FPCIbits.PSS = 0b11101;
     /* PCI Bypass Enable bit
        0 = PCI function is not bypassed */
     PG3FPCIbits.BPEN   = 0;
@@ -1146,31 +1165,31 @@ void InitPWMGenerator3 (void)
        010 = LEB is active
        001 = Duty cycle is active (base PWM Generator signal)
        000 = No termination qualifier used (qualifier forced to '1')(3)*/
-    PG3FPCIbits.TQSS  = 3;
+    PG3FPCIbits.TQSS  = 0;
 #endif  
     
-    /* PWM GENERATOR 3 Current Limit PCI REGISTER LOW */
+    /* PWM GENERATOR 3 Current Limit PCI REGISTER */
     PG3CLPCI    = 0x0000;
-    /* PWM GENERATOR 3 Feed Forward PCI REGISTER LOW */
+    /* PWM GENERATOR 3 Feed Forward PCI REGISTER */
     PG3FFPCI    = 0x0000;
-    /* PWM GENERATOR 3 Sync PCI REGISTER LOW */
+    /* PWM GENERATOR 3 Sync PCI REGISTER */
     PG3SPCI     = 0x0000;
     
-    /* Initialize PWM GENERATOR 3 LEADING-EDGE BLANKING REGISTER LOW */
+    /* Initialize PWM GENERATOR 3 LEADING-EDGE BLANKING REGISTER */
     PG3LEB      = 0x0000;
     
     /* Initialize PWM GENERATOR 3 PHASE REGISTER */
-    PG3PHASE     = MIN_DUTY;
+    PG3PHASEbits.PHASE     = MIN_DUTY;
     /* Initialize PWM GENERATOR 3 DUTY CYCLE REGISTER */
-    PG3DC        = MIN_DUTY;
+    PG3DCbits.DC           = MIN_DUTY;
     /* Initialize PWM GENERATOR 3 DUTY CYCLE ADJUSTMENT REGISTER */
     PG3DCA       = 0x0000;
     /* Initialize PWM GENERATOR 3 PERIOD REGISTER */
     PG3PER       = 0x0000;
-    /* Initialize PWM GENERATOR 3 DEAD-TIME REGISTER LOW */
-    PG3DTbits.DTH       = DEADTIME;
-    /* Initialize PWM GENERATOR 3 DEAD-TIME REGISTER HIGH */
-    PG3DTbits.DTL      = DEADTIME;
+    /* Initialize PWM GENERATOR 3 DEAD-TIME REGISTER */
+    PG3DTbits.DTH = DEADTIME;
+    /* Initialize PWM GENERATOR 3 DEAD-TIME REGISTER */
+    PG3DTbits.DTL = DEADTIME;
 
     /* Initialize PWM GENERATOR 3 TRIGGER A REGISTER */
     PG3TRIGA     = 0x0000;

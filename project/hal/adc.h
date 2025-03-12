@@ -55,7 +55,7 @@
 #include <xc.h>
 #include <stdint.h>
         
-#include "userparms.h"
+#include "mc1_user_params.h"
         
 // </editor-fold>
 
@@ -64,31 +64,35 @@
 #endif
         
 // <editor-fold defaultstate="expanded" desc="DEFINITIONS/CONSTANTS ">
-        
-#define ADCBUF_IA     (int16_t)(2048 - AD1CH0DATA)<<4
-#define ADCBUF_IB     (int16_t)(2048 - AD2CH0DATA)<<4
-        
-#define ADCBUF_IBUS1   (int16_t)((AD1CH2DATA- 2048)<<4)
-#define ADCBUF_IBUS2   (int16_t)((AD1CH3DATA- 2048)<<4)      
-        
-#define ADCBUF_POT    (int16_t)AD1CH1DATA
 /*Maximum count in 12-bit ADC*/
-#define MAX_POT_COUNT  4096.0f
-
+#define MAX_ADC_COUNT     4096.0f
+#define HALF_ADC_COUNT    2048    
+        
+/*Converting 2^11 format to 2^15 format  */
+#define MC1_ADCBUF_IA    (int16_t)(HALF_ADC_COUNT - AD1CH0DATA)<<4
+#define MC1_ADCBUF_IB    (int16_t)(HALF_ADC_COUNT - AD2CH0DATA)<<4
+#define ADCBUF_IBUS1     (int16_t)((AD1CH2DATA- HALF_ADC_COUNT)<<4)
+#define ADCBUF_IBUS2     (int16_t)((AD1CH3DATA- HALF_ADC_COUNT)<<4) 
+        
+#define MC1_ADCBUF_POT   (int16_t)AD1CH1DATA
+#define MC_ADCBUF_VDC    (int16_t)AD1CH4DATA 
+        
+       
 #ifdef SINGLE_SHUNT        
     /* IBUS2 (AD1CH3) is the ADC Interrupt source in Single Shunt*/
-    #define EnableADCInterrupt()            _AD1CH3IE = 1
-    #define DisableADCInterrupt()           _AD1CH3IE = 0
-    #define ADCInterrupt                    _AD1CH3Interrupt  
-    #define ADCInterruptFlagClear           _AD1CH3IF = 0 
+    #define MC1_EnableADCInterrupt()            _AD1CH3IE = 1
+    #define MC1_DisableADCInterrupt()           _AD1CH3IE = 0
+    #define MC1_ADC_INTERRUPT                   _AD1CH3Interrupt  
+    #define MC1_ClearADCIF()                    _AD1CH3IF = 0 
+    #define MC1_ClearADCIF_ReadADCBUF()         ADCBUF_IBUS2
 #else
     /* POT (AD1CH1) is the ADC Interrupt source in Dual Shunt*/
-    #define EnableADCInterrupt()            _AD1CH1IE = 1
-    #define DisableADCInterrupt()           _AD1CH1IE = 0
-    #define ADCInterrupt                    _AD1CH1Interrupt  
-    #define ADCInterruptFlagClear           _AD1CH1IF = 0      
-#endif              
-
+    #define MC1_EnableADCInterrupt()            _AD1CH1IE = 1
+    #define MC1_DisableADCInterrupt()           _AD1CH1IE = 0
+    #define MC1_ADC_INTERRUPT                   _AD1CH1Interrupt  
+    #define MC1_ClearADCIF()           			_AD1CH1IF = 0  
+    #define MC1_ClearADCIF_ReadADCBUF()         MC1_ADCBUF_POT 
+#endif
 // </editor-fold>
         
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">

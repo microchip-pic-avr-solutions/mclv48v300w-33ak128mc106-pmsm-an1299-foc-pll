@@ -68,13 +68,13 @@
 */
 typedef struct
 {
-    /** Duty cycle for phase #1 */
+    /* Duty cycle for phase #A */
     float dutycycle1;
 
-    /** Duty cycle for phase #2 */
+    /* Duty cycle for phase #B */
     float dutycycle2;
 
-    /** Duty cycle for phase #3 */
+    /* Duty cycle for phase #C */
     float dutycycle3;
 
 } MC_DUTYCYCLEOUT_T;
@@ -83,14 +83,12 @@ typedef struct
 
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
-void MC_CalculateSpaceVectorPhaseShifted( const MC_ABC_T *,float,
-                                                           MC_DUTYCYCLEOUT_T *);
+uint8_t MC_CalculateSpaceVectorPhaseShifted( const MC_ABC_T *,float, MC_DUTYCYCLEOUT_T *);
 
 // </editor-fold>
 
 // <editor-fold defaultstate="expanded" desc=" VARIABLES ">
 
-extern MC_DUTYCYCLEOUT_T pwmDutycycle;
 
 // </editor-fold>
 

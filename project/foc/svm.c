@@ -95,92 +95,56 @@ static void CalcTimes(float period)
 * @param Pointer to the data structure containing ABC voltages.
 * @param period value.
 * @param Pointer to the data structure containing Duty Cycle Outputs.
-* @return none.
+* @return SVM sector.
 * 
 * @example
-* <CODE> MC_CalculateSpaceVectorPhaseShifted(&vabc,period,&dutycycle); </CODE>
+* <CODE> sector = MC_CalculateSpaceVectorPhaseShifted(&vabc,period,&dutycycle); </CODE>
 *
 */
-void MC_CalculateSpaceVectorPhaseShifted( const MC_ABC_T *pABC, float period,
+uint8_t MC_CalculateSpaceVectorPhaseShifted( const MC_ABC_T *pABC, float period,
                                               MC_DUTYCYCLEOUT_T *pDutyCycleOut)
 {
-    if(pABC->a < 0.0)
+    uint8_t sector = 0;
+    
+    /*SVM Sector Identification*/
+    if (pABC->a > 0.0)
     {
-        if(pABC->b < 0.0)
-        {
-            /** Must be Sector 4 since Sector 0 not allowed;
-             * Sector 4: (1,0,0)  180-240 degrees */
-            T2 = -pABC->a;
-            T1 = -pABC->b;
+        sector = sector + 1;
+    }
+    if (pABC->b > 0.0)
+    {
+        sector = sector + 2;
+    }
+    if (pABC->c > 0.0)
+    {
+        sector = sector + 4;
+    }
+    
+    switch(sector)
+    {
+        case 1:
+            /** Sector 1: (0,0,1)  60-120 degrees */
+            T2 = -pABC->b;
+            T1 = -pABC->c;
 
             CalcTimes(period);
 
-            pDutyCycleOut->dutycycle1 = Tc;
-            pDutyCycleOut->dutycycle2  = Tb;
-            pDutyCycleOut->dutycycle3  = Ta;
-        }
-        else
-        {
-            if(pABC->c < 0.0)
-            {
+            pDutyCycleOut->dutycycle1  = Tb;
+            pDutyCycleOut->dutycycle2  = Ta;
+            pDutyCycleOut->dutycycle3  = Tc;
+        break;
+        case 2:
+            /** Sector 2: (0,1,0)  300-360 degrees */
+            T2 = -pABC->c;
+            T1 = -pABC->a;
 
-                /** Sector 2: (0,1,0)  300-360 degrees */
-                T2 = -pABC->c;
-                T1 = -pABC->a;
+            CalcTimes(period);
 
-                CalcTimes(period);
-
-                pDutyCycleOut->dutycycle1  = Ta;
-                pDutyCycleOut->dutycycle2  = Tc;
-                pDutyCycleOut->dutycycle3  = Tb;
-            }
-            else
-            {
-
-                /** Sector 6: (1,1,0)  240-300 degrees */
-                T2 = pABC->c;
-                T1 = pABC->b;
-
-                CalcTimes(period);
-
-                pDutyCycleOut->dutycycle1  = Tb;
-                pDutyCycleOut->dutycycle2  = Tc;
-                pDutyCycleOut->dutycycle3  = Ta;
-            }
-        }
-    }
-    else
-    {
-        if(pABC->b < 0.0)
-        {
-            if(pABC->c < 0.0)
-            {
-
-                /** Sector 1: (0,0,1)  60-120 degrees */
-                T2 = -pABC->b;
-                T1 = -pABC->c;
-
-                CalcTimes(period);
-
-                pDutyCycleOut->dutycycle1  = Tb;
-                pDutyCycleOut->dutycycle2  = Ta;
-                pDutyCycleOut->dutycycle3  = Tc;
-            }
-            else
-            {
-                /** Sector 5: (1,0,1)  120-180 degrees */
-                T2 = pABC->a;
-                T1 = pABC->c;
-
-                CalcTimes(period);
-
-                pDutyCycleOut->dutycycle1  = Tc;
-                pDutyCycleOut->dutycycle2  = Ta;
-                pDutyCycleOut->dutycycle3  = Tb;
-            }
-        }
-        else
-        {
+            pDutyCycleOut->dutycycle1  = Ta;
+            pDutyCycleOut->dutycycle2  = Tc;
+            pDutyCycleOut->dutycycle3  = Tb;
+        break;
+        case 3:
             /** Sector 3: (0,1,1)  0-60 degrees */
             T2 = pABC->b;
             T1 = pABC->a;
@@ -190,8 +154,48 @@ void MC_CalculateSpaceVectorPhaseShifted( const MC_ABC_T *pABC, float period,
             pDutyCycleOut->dutycycle1  = Ta;
             pDutyCycleOut->dutycycle2  = Tb;
             pDutyCycleOut->dutycycle3  = Tc;
-        }
-    }
+        break;
+        case 4:
+            /* Sector 4: (1,0,0)  180-240 degrees */
+            T2 = -pABC->a;
+            T1 = -pABC->b;
+
+            CalcTimes(period);
+
+            pDutyCycleOut->dutycycle1 =  Tc;
+            pDutyCycleOut->dutycycle2  = Tb;
+            pDutyCycleOut->dutycycle3  = Ta;
+        break;
+        case 5:
+            /** Sector 5: (1,0,1)  120-180 degrees */
+            T2 = pABC->a;
+            T1 = pABC->c;
+
+            CalcTimes(period);
+
+            pDutyCycleOut->dutycycle1  = Tc;
+            pDutyCycleOut->dutycycle2  = Ta;
+            pDutyCycleOut->dutycycle3  = Tb;
+        break;
+        case 6:
+            /** Sector 6: (1,1,0)  240-300 degrees */
+            T2 = pABC->c;
+            T1 = pABC->b;
+
+            CalcTimes(period);
+
+            pDutyCycleOut->dutycycle1  = Tb;
+            pDutyCycleOut->dutycycle2  = Tc;
+            pDutyCycleOut->dutycycle3  = Ta;
+        break;
+        default:
+            pDutyCycleOut->dutycycle1  = 0;
+            pDutyCycleOut->dutycycle2  = 0;
+            pDutyCycleOut->dutycycle3  = 0;
+        break;
+    }   /* End Of switch - case */
+    
+    return sector;
 }
 
 // </editor-fold>

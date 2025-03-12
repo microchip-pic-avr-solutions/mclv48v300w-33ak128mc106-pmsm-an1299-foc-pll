@@ -57,56 +57,90 @@ extern "C" {
 #include <math.h>
 #include <stdint.h>
 
+#include "../mc1_user_params.h"
 // </editor-fold>
 
 // <editor-fold defaultstate="expanded" desc="DEFINITIONS/CONSTANTS ">
     
-/*Parameters of Hurst075 (Hurst DMB0224C10002 or AC300020 or Short Hurst)*/    
-
-/** Motor Parameters */
-/* per phase resistance (unit : Ohm) */
-#define MOTOR_PER_PHASE_RESISTANCE                    2.833f
-/* per phase inductance (unit : Henry) */
-#define MOTOR_PER_PHASE_INDUCTANCE                    0.00243f
-/* Motor Back EMF Constant (unit : line voltage peak / kRPM */
-#define MOTOR_BEMF_CONSTANT_MECH                      7.56f
+/*Parameters of Hurst075 (Hurst DMB0224C10002 or AC300020 or Short Hurst)*/
+/** Motor Name Plate Parameters */
 /* No.of pole pairs*/
-#define POLE_PAIRS                                    5.0f
+#define POLE_PAIRS                                      5
+/* per phase resistance (unit : ohm) */
+#define MOTOR_PER_PHASE_RESISTANCE                      2.54f
+/* per phase inductance (unit : henry) */
+#define MOTOR_PER_PHASE_INDUCTANCE                      0.00221f
+/* Motor Back EMF Constant (unit : line voltage peak / kRPM) */
+#define MOTOR_BEMF_CONSTANT_MECH                        7.32f
 /* Speed for Open Loop to Closed Loop Transition (unit : RPM)*/
-#define END_SPEED_RPM                                 250.0f
-/* Nominal Speed without Field Weakening (unit : RPM)*/
-#define NOMINAL_SPEED_RPM                             2000.0f
-/* Maximum Speed with Field Weakening (unit : RPM)*/
-#define FW_SPEED_RPM                                  3500.0f
-/* Maximum motor current : peak current per phase(unit : amps)*/
-#define MAX_MOTOR_CURRENT                              1.44f
-/* Maximum ID Reference for Field Weakening (unit : amps)*/
-#define MAX_FW_NEGATIVE_ID_REF                        -1.44f
+#define MINIMUM_SPEED_RPM                               500.0f
+/* Nominal Speed without Flux Weakening (unit : RPM)*/
+#define NOMINAL_SPEED_RPM                               2500.0f
+/* Maximum Speed with Flux Weakening (unit : RPM)*/
+#define MAXIMUM_SPEED_RPM                               3500.0f
+/* Motor Rated Phase Current in RMS (unit : amps) */
+#define NOMINAL_CURRENT_PHASE_RMS                       1.16f
     
-/**DC Bus Utilization Factor or Modulation Index Limit*/    
-#define DCBUS_UTILIZATION_FACTOR                      0.85f
-/** Open Loop Current Reference (unit: Amps )*/
-#define IQ_CURRENT_REF_OPENLOOP                        0.30f
+/* Motor Peak Current per phase (unit : amps) */
+#define NOMINAL_CURRENT_PEAK      (float) (NOMINAL_CURRENT_PHASE_RMS * M_SQRT2)
 
 /*PI Controller Parameters*/    
-/** D-axis Current Control - PI Coefficients */
-#define D_CURRCNTR_PTERM                              1.58
-#define D_CURRCNTR_ITERM                              0.734
-#define D_CURRCNTR_CTERM                              0.999
-#define D_CURRCNTR_OUTMAX                             DCBUS_UTILIZATION_FACTOR
+/** D-axis Current Control Loop - PI Coefficients */
+#define D_CURRCNTR_PTERM                                7.36667f
+#define D_CURRCNTR_ITERM                                0.423333f
+#define D_CURRCNTR_OUTMAX                               VMAX_CLOSEDLOOP_CONTROL
 
-/** Q-axis Current Control - PI Coefficients */
-#define Q_CURRCNTR_PTERM                              1.58
-#define Q_CURRCNTR_ITERM                              0.734
-#define Q_CURRCNTR_CTERM                              0.999
-#define Q_CURRCNTR_OUTMAX                             DCBUS_UTILIZATION_FACTOR
+/** Q-axis Current Control Loop - PI Coefficients */
+#define	Q_CURRCNTR_PTERM                                7.36667f
+#define	Q_CURRCNTR_ITERM                                0.423333f
+#define Q_CURRCNTR_OUTMAX                               VMAX_CLOSEDLOOP_CONTROL
 
-/** Velocity Control - PI Coefficients */
-#define SPEEDCNTR_PTERM                               0.00183
-#define SPEEDCNTR_ITERM                               0.0543f/20000.0f
-#define SPEEDCNTR_CTERM                               1.0
-#define SPEEDCNTR_OUTMAX                              MAX_MOTOR_CURRENT
+/** Speed Control Loop - PI Coefficients */
+#define SPEEDCNTR_PTERM                                 0.00114f
+#define SPEEDCNTR_ITERM                                 0.00000110923f
+#define SPEEDCNTR_OUTMAX                                NOMINAL_CURRENT_PEAK
 
+/* Filter constant definitions  */
+/* BEMF filter cut off frequency (unit : Hz)*/
+#define BEMF_FILTER_CUTOFF_FREQUENCY                    250.0f
+/* Velocity filter cut off frequency (unit : Hz)*/
+#define VELOCITY_FILTER_CUTOFF_FREQUENCY                55.0f    
+    
+/* Control parameters */
+/* Open loop startup peak current per phase (unit : amps) */
+#define OPEN_LOOP_CURRENT                               0.3f
+/* Open Loop Speed Reference Ramp rate (unit : RPM per second)  */
+#define OPEN_LOOP_SPEED_REF_RAMP_RATE                   2000.0f 
+/* Open Loop to Closed Loop Transition speed (unit : RPM)*/
+#define MAX_OPENLOOP_SPEED_RPM                          MINIMUM_SPEED_RPM
+/* Closed Loop Speed Reference Ramp rate (unit : RPM per second) */
+#define CLOSED_LOOP_SPEED_REF_RAMP_RATE                 2000.0f
+/*Current ramp rate for open loop to closed loop (unit : amps per MC1_LOOPTIME_SEC*/
+#define CURRENT_RAMP_VALUE                              0.05f
+    
+/*Fault parameters*/
+/* Overcurrent fault limit(software) - phase current (unit : amps)*/
+#define OC_FAULT_LIMIT_PHASE                            3.5f  
+/* Overcurrent fault limit(comparator and Fault PCI) - bus current (unit : amps)*/
+#define OC_FAULT_LIMIT_DCBUS                            3.0f  
+    
+/* Rotor locking parameters */
+/* Lock time for Motor's poles alignment (unit : seconds)*/
+#define LOCK_TIME_SEC                                   0.5f
+/* Locking Current (unit : amps)*/
+#define LOCK_CURRENT                                    0.30f
+ 
+/** Flux Weakening Control Parameters */  
+/* Voltage circle limit for flux weakening*/
+#define FW_VOLATGE_MARGIN_FACTOR                        0.90f
+/* Maximum D-axis current Reference for Flux Weakening (unit : amps)*/
+#define MAX_FW_NEGATIVE_ID_REF                          -(NOMINAL_CURRENT_PEAK)
+/* Voltage feedback Flux Weakening controller parameters */
+#define FW_PTERM                                        SPEEDCNTR_PTERM*20 
+#define FW_ITERM                                        SPEEDCNTR_ITERM*20
+/* Flux Weakening Id reference filter cut off frequency (unit : Hz)*/
+#define FW_ID_FILTER_CUTOFF_FREQUENCY                   100.0f
+    
 // </editor-fold>
 
 #ifdef __cplusplus

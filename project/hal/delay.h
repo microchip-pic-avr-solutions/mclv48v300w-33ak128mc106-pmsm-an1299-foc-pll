@@ -50,6 +50,7 @@
 
 // <editor-fold defaultstate="expanded" desc="HEADER FILES ">
 
+/* System Clock - 200MHz */
 #define FCY 200000000UL
 #include <libpic30.h>
 
