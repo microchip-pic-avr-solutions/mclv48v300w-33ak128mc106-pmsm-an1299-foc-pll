@@ -73,38 +73,45 @@ void InitializeADCs(void)
     /* Channel Configuration for IA*/
     /*ADC1 Channel 0 for IA : OA1OUT/AD1AN0/CMP1A/RP3/RA2 */
     AD1CH0CONbits.PINSEL = 0;       
-    AD1CH0CONbits.SAMC = 3;         
+    AD1CH0CONbits.SAMC = 3;    
     AD1CH0CONbits.LEFT = 0;
     AD1CH0CONbits.DIFF = 0;
 
     /* Channel Configuration for IB*/
     /*ADC2 Channel 0 for IB : OA2OUT/AD2AN1/CMP2A/RP17/INT0/RB0 */    
     AD2CH0CONbits.PINSEL = 1;      
-    AD2CH0CONbits.SAMC = 3;        
+    AD2CH0CONbits.SAMC = 3;    
     AD2CH0CONbits.LEFT = 0;
     AD2CH0CONbits.DIFF = 0;
     
     /* Channel Configuration for IBUS1*/
     /*ADC1 Channel 2 for IBUS1 : OA3OUT/AD1AN3/CMP3A/RP6/RA5 */ 
     AD1CH2CONbits.PINSEL = 3;      
-    AD1CH2CONbits.SAMC = 1;      
+    AD1CH2CONbits.SAMC = 3;
     AD1CH2CONbits.LEFT = 0;
     AD1CH2CONbits.DIFF = 0;
 
     /* Channel Configuration for IBUS2*/
     /*ADC1 Channel 3 for IBUS2 : OA3OUT/AD1AN3/CMP3A/RP6/RA5 */ 
-    AD1CH3CONbits.PINSEL =3;        
-    AD1CH3CONbits.SAMC = 1;         
+    AD1CH3CONbits.PINSEL = 3;        
+    AD1CH3CONbits.SAMC = 3;    
     AD1CH3CONbits.LEFT = 0;
     AD1CH3CONbits.DIFF = 0; 
     
     /* Channel Configuration for POT*/
     /*ADC1 Channel 1 for POT : AD1AN10/RP12/RA11 */     
     AD1CH1CONbits.PINSEL = 10;      
-    AD1CH1CONbits.SAMC = 2;         
+    AD1CH1CONbits.SAMC = 5;         
     AD1CH1CONbits.LEFT = 0;
     AD1CH1CONbits.DIFF = 0;
 
+    /* Channel Configuration for VBUS*/
+    /*ADC1 Channel 4 for VBUS : AD1AN6/RP8/IOMF1/RA7 */     
+    AD1CH4CONbits.PINSEL = 6;      
+    AD1CH4CONbits.SAMC = 5;         
+    AD1CH4CONbits.LEFT = 0;
+    AD1CH4CONbits.DIFF = 0;
+    
     /* Turn on the ADC Core 1 */   
     AD1CONbits.ON = 1;     
     /* Waiting till the ADC Core 1 is ready*/
@@ -147,7 +154,10 @@ void InitializeADCs(void)
 
 #endif
     /*PWM1 ADC Trigger 1 for POT - AD1CH1*/
-    AD1CH1CONbits.TRG1SRC = 4;      
+    AD1CH1CONbits.TRG1SRC = 4;   
+    
+    /*PWM1 ADC Trigger 1 for VBUS - AD1CH4*/
+    AD1CH4CONbits.TRG1SRC = 4;     
 
 }
 

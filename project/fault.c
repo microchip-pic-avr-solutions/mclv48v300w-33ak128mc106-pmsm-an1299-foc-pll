@@ -1,11 +1,8 @@
 // <editor-fold defaultstate="collapsed" desc="Description/Instruction ">
 /**
- * @file fdweak.h
+ * @file fault.c
  *
- * @brief This header file lists data type definitions and interface functions 
- * of the flux weakening module
- *
- * Component: FIELD WEAKENING
+ * @brief This module implements the fault detection routines.
  *
  */
 // </editor-fold>
@@ -45,52 +42,74 @@
 *******************************************************************************/
 // </editor-fold>
 
-#ifndef __FDWEAK_H
-#define __FDWEAK_H
-
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
+    
+#ifdef __XC16__  // See comments at the top of this header file
+    #include <xc.h>
+#endif // __XC16__
 
 #include <stdint.h>
 #include <stdbool.h>
 
-// </editor-fold>
+#include "fault.h"
+#include "mc1_init.h"
 
-#ifdef __cplusplus  // Provide C++ Compatability
-    extern "C" {
-#endif
+// </editor-fold> 
 
-// <editor-fold defaultstate="collapsed" desc="TYPE DEFINITIONS ">
+// <editor-fold defaultstate="collapsed" desc="Function Declarations ">
 
-/*
- * Field weakening Parameter data type
- */
-typedef struct
-{
-    /** d-axis current reference */
-    float IdRef;
-    /** numerator part of the flux weakening equation */
-    float fwNum;
-    /** denominator part of the flux weakening equation */
-    float fwDen;
 
-} FDWEAK_PARM_T;
+
+// </editor-fold> 
+
+// <editor-fold defaultstate="collapsed" desc="Global Variables  ">
+
+
 
 // </editor-fold>
 
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
-void InitFWParams(void);
-float FieldWeakening(float, float);
-
-// </editor-fold>
-
-// <editor-fold defaultstate="expanded" desc=" VARIABLES ">
-
-extern FDWEAK_PARM_T fdWeakParm;
-
-// </editor-fold>
-
-#ifdef __cplusplus  // Provide C++ Compatibility
+/**
+ * <B> Function: MCAPP_OverCurrentFault_Detect(MCAPP_MEASURE_T *pMotorInputs, MCAPP_FAULT_T * pFault)  </B>
+ * 
+ * @brief Function to detect overcurrent fault
+ * @param Pointer to the data structure containing measured motor parameters 
+ * and fault data structure
+ * @return fault status
+ */
+bool MCAPP_OverCurrentFault_Detect(MCAPP_MEASURE_T *pMotorInputs, MCAPP_FAULT_T * pFault)
+{
+    MCAPP_MEASURE_CURRENT_T *pCurrent = &pMotorInputs->measureCurrent;
+    
+    bool faultStatus;
+    
+    float Imax, Ic;
+    
+    Ic = -pCurrent->Ia_actual -pCurrent->Ib_actual ;
+    
+    /*Temp overcurrent fault*/
+    if((pCurrent->Ia_actual > pCurrent->Ib_actual)&&(pCurrent->Ia_actual > Ic)){
+        Imax = pCurrent->Ia_actual;
     }
-#endif
-#endif      // end of __FDWEAK_H
+    else if ( ( pCurrent->Ib_actual > Ic ) ){
+        Imax = pCurrent->Ib_actual;
+    }
+    else{
+        Imax = Ic;
+    }
+    
+    if(( Imax > pFault->overCurrentFaultLimit))
+    {
+        pFault->faultState = MCAPP_OVERCURRENT_FAULT_PHASE;
+        faultStatus = 1;
+    }
+    else{
+        pFault->faultState = MCAPP_FAULT_NONE;
+        faultStatus = 0;
+    }
+    
+    return faultStatus;
+}
+
+// </editor-fold>

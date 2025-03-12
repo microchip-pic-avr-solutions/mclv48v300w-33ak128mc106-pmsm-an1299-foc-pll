@@ -126,14 +126,14 @@ inline static void UART1_InterruptReceiveDisable(void) {_U1RXIE = 0; }
  *(i.e. 16x baud clock). 
  * Baud Rate = FREQ_UART_CLK (BCLKSEL)/ (16*(BRG +1))
  */
-inline static void UART1_SpeedModeStandard(void) {U1MODEbits.BRGH = 0; }
+inline static void UART1_SpeedModeStandard(void) {U1CONbits.BRGS = 0; }
 
 /* UART1_SpeedModeHighSpeed();
  * Configures UART1 module to operate in High-speed baud rate mode 
  * (i.e. 4x baud clock).
  * Baud Rate = FREQ_UART_CLK (BCLKSEL) / (4*(BRG +1))
  */
-inline static void UART1_SpeedModeHighSpeed(void) {U1MODEbits.BRGH = 1; }
+inline static void UART1_SpeedModeHighSpeed(void) {U1CONbits.BRGS = 1; }
 
 /* UART1_BaudRateDividerSet(500);
  * Configures the baud rate divider for UART1 module.
@@ -151,7 +151,7 @@ inline static void UART1_BaudRateDividerSet(uint32_t baudRateDivider)
  */
 inline static void UART1_ModuleDisable(void) 
 {
-    U1MODEbits.UARTEN = 0;
+    U1CONbits.ON = 0;
 }
 
 /* UART1_ModuleEnable();
@@ -160,18 +160,18 @@ inline static void UART1_ModuleDisable(void)
  */
 inline static void UART1_ModuleEnable(void) 
 {
-    U1MODEbits.UARTEN = 1;
+    U1CONbits.ON = 1;
 }
 
 /* UART1_TransmitModeEnable();
  * Enables UART1 module transmit mode.
  */
-inline static void UART1_TransmitModeEnable(void) {U1MODEbits.UTXEN = 1; }
+inline static void UART1_TransmitModeEnable(void) {U1CONbits.TXEN = 1; }
 
 /* UART1_TransmitModeDisable();
  * Disables UART1 module transmit mode.
  */
-inline static void UART1_TransmitModeDisable(void) {U1MODEbits.UTXEN= 0; }
+inline static void UART1_TransmitModeDisable(void) {U1CONbits.TXEN= 0; }
 
 /* UART1_IsReceiveBufferDataReady();
  * Gets the status of UART1 Receive Buffer Data Available flag
@@ -180,7 +180,7 @@ inline static void UART1_TransmitModeDisable(void) {U1MODEbits.UTXEN= 0; }
  */
 inline static bool UART1_IsReceiveBufferDataReady(void)
 {
-    return(!U1STAbits.URXBE) ;
+    return(!U1STATbits.RXBE) ;
 }
 
 /* UART1_IsReceiveBufferOverFlowDetected();
@@ -190,7 +190,7 @@ inline static bool UART1_IsReceiveBufferDataReady(void)
  */
 inline static bool UART1_IsReceiveBufferOverFlowDetected(void)
 {
-    return(U1STAbits.RXFOIF) ;
+    return(U1STATbits.RXFOIF) ;
 }
 
 /* UART1_IsFrameErrorDetected();
@@ -202,7 +202,7 @@ inline static bool UART1_IsReceiveBufferOverFlowDetected(void)
  */
 inline static bool UART1_IsFrameErrorDetected(void)
 {
-    return(U1STAbits.FERIF) ;
+    return(U1STATbits.FERIF) ;
 }
 
 /* UART1_IsParityErrorDetected();
@@ -214,7 +214,7 @@ inline static bool UART1_IsFrameErrorDetected(void)
  */
 inline static bool UART1_IsParityErrorDetected(void)
 {
-    return(U1STAbits.PERIF) ;
+    return(U1STATbits.PERIF) ;
 }
 
 /* UART1_IsReceiverIdle();
@@ -225,7 +225,7 @@ inline static bool UART1_IsParityErrorDetected(void)
  */
 inline static bool UART1_IsReceiverIdle(void)
 {
-    return(U1STAbits.RIDLE) ;
+    return(U1STATbits.RCIDL) ;
 }
 
 /* UART1_IsTransmissionComplete();
@@ -237,7 +237,7 @@ inline static bool UART1_IsReceiverIdle(void)
  */
 inline static bool UART1_IsTransmissionComplete(void)
 {
-    return(U1STAbits.TXBE) ;
+    return(U1STATbits.TXBE) ;
 }
 
 /* UART1_StatusBufferFullTransmitGet();
@@ -247,7 +247,7 @@ inline static bool UART1_IsTransmissionComplete(void)
  */
 inline static bool UART1_StatusBufferFullTransmitGet(void)
 {
-    return U1STAbits.UTXBF;
+    return U1STATbits.TXBF;
 }
 
 /* UART1_StatusGet();
@@ -260,7 +260,7 @@ inline static bool UART1_StatusBufferFullTransmitGet(void)
  */
 inline static uint16_t UART1_StatusGet(void)
 {
-    return U1STA;
+    return U1STAT;
 }
 
 /* UART1_ReceiveBufferOverrunErrorFlagClear();
@@ -270,7 +270,7 @@ inline static uint16_t UART1_StatusGet(void)
  */
 inline static void UART1_ReceiveBufferOverrunErrorFlagClear(void)
 {
-    U1STAbits.RXFOIF = 0;
+    U1STATbits.RXFOIF = 0;
 }
 
 /* UART1_DataWrite(txdata);
@@ -279,7 +279,7 @@ inline static void UART1_ReceiveBufferOverrunErrorFlagClear(void)
  */
 inline static void UART1_DataWrite(uint32_t data)
 {
-    U1TXREGbits.TXB =(uint8_t)data;
+    U1TXBbits.TXB =(uint8_t)data;
 }
 
 /* UART1_DataRead();
@@ -288,7 +288,7 @@ inline static void UART1_DataWrite(uint32_t data)
  */
 inline static uint16_t UART1_DataRead(void)
 {
-    return U1RXREG;
+    return U1RXB;
 }
 /**
  * Sets the priority level for UART1 Rx interrupt.

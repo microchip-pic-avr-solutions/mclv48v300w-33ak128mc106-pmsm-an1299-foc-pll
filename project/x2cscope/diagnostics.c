@@ -62,6 +62,7 @@
 #define X2C_BUFFER_SIZE 4900
 X2C_DATA static uint8_t X2C_BUFFER[X2C_BUFFER_SIZE];
     /*
+     * UART uses Clock Module #8 (100MHz)
      * baud rate = 100MHz/16/(1+baudrate_divider) for highspeed = false
      * baud rate = 100MHz/4/(1+baudrate_divider) for highspeed = true
      * 

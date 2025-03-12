@@ -54,6 +54,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "motor_control_types.h"
+
 // </editor-fold>
 
 #ifdef __cplusplus  // Provide C++ Compatability
@@ -61,32 +63,6 @@
 #endif
 
 // <editor-fold defaultstate="collapsed" desc="TYPE DEFINITIONS ">
-
-/**
- * ABC reference frame data type
- */
-typedef struct
-{
-    /** Phase A component */
-    float   a;
-    /** Phase B component */
-    float   b;
-    /** Phase C component */
-    float   c;
-
-} MC_ABC_T;
-
-/**
- * Sine-Cosine data type
-*/
-typedef struct
-{
-    /** Cosine component */
-    float cos;
-    /** Sine component */
-    float sin;
-
-} MC_SINCOS_T;
 
 /**
  * D-Q reference frame data type
@@ -126,10 +102,7 @@ void MC_TransformClarke(const MC_ABC_T *,MC_ALPHABETA_T *);
 
 // <editor-fold defaultstate="expanded" desc=" VARIABLES ">
 
-extern MC_ABC_T vabc;
-extern MC_SINCOS_T sincosTheta;
-extern MC_DQ_T vdq,idq;
-extern MC_ALPHABETA_T valphabeta,ialphabeta;
+
 
 // </editor-fold>
 

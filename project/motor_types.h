@@ -1,10 +1,11 @@
 // <editor-fold defaultstate="collapsed" desc="Description/Instruction ">
 /**
- * @file general.c
+ * @file motor_types.h
  *
- * @brief This module implements the algebraic equations
+ * @brief This module holds variable type definitions of data structure holding
+ * FOC control parameters and motor parameters.
  *
- * Component: GENERAL
+ * Component: MOTOR
  *
  */
 // </editor-fold>
@@ -43,79 +44,45 @@
 *
 *******************************************************************************/
 // </editor-fold>
+#ifndef MOTOR_TYPES_H
+#define	MOTOR_TYPES_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
 
 #include <stdint.h>
+#include <stdbool.h>
 
-#include "general.h"
+// </editor-fold>
+
+// <editor-fold defaultstate="collapsed" desc="VARIABLE TYPE DEFINITIONS ">
+    
+typedef struct
+{
+    /* Motor Parameters */
+    uint16_t
+        polePairs;             /* Pole pairs */
+    float
+        Rs,                    /* Resistance */
+        Ls;                    /* Stator inductance */
+        
+    float
+        Ke,                    /* Back EMF constant */
+        NominalSpeed,          /* Nominal speed */
+        MaxSpeed,              /* Maximum speed */
+        MinSpeed,              /* Minimum speed */
+        MaxOLSpeed,            /* Maximum open loop electrical speed */
+        RatedCurrent;          /* Current drawn at rated load */
+
+} MCAPP_MOTOR_T;
 
 // </editor-fold>
 
-// <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
-
-/**
-* <B> Function: SaturateFloat( float * const, const float, const float) </B>
-*
-* @brief Function saturates a float value between the minimum and maximum values.
-* 
-* @param pointer to the input.
-* @param minimum value.
-* @param maximum value.
-* @return none.
-* 
-* @example
-* <CODE> SaturateFloat( &x, -1.0f, 0.0f ); </CODE>
-*
-*/
-void SaturateFloat( float * const input, const float min, const float max  )
-{
-    if( max < (*input ))
-    {
-        *input = max;
-    }
-    else if( min > (*input ))
-    {
-        *input = min;
-    }
-    else
-    {
-
-    }
+#ifdef	__cplusplus
 }
-/**
-* <B> Function: SquareFloat(const float ) </B>
-*
-* @brief Function returns square of a floating point variable.
-* 
-* @param floating point value.
-* @return square of the floating point input.
-* 
-* @example
-* <CODE> SquareFloat(x); </CODE>
-*
-*/
-float SquareFloat(const float x)
-{
-    return ( x * x );
-}
-/**
-* <B> Function:  LowPassFilter (float ,float ,float * ) </B>
-*
-* @brief Function runs 1st order backward Euler filter operation on the input.
-*        
-* @param input signal
-* @param Filter coefficient value
-* @param pointer to output signal
-*
-* @example
-* <CODE> LowPassFilter (input, filterCoeff,*output); </CODE>
-*
-*/
+#endif
 
-void LowPassFilter (float input,float filterCoeff,float* output)
-{
-	*output = *output+ ((input - *output) * filterCoeff) ;
-}
+#endif	/* MOTOR_TYPES_H */
 
-// </editor-fold>

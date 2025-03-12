@@ -67,7 +67,7 @@
 
 #define TIMER1_CLOCK            100000000UL 
 #define TIMER1_CLOCK_PRESCALER  8
-#define TIMER1_PERIOD_uSec      1000
+#define TIMER1_PERIOD_uSec      100
         
 #define TIMER1_CLOCK_SCALED     (TIMER1_CLOCK/(TIMER1_CLOCK_PRESCALER*1000.0*1000.0))
         
@@ -77,10 +77,10 @@
         
 // <editor-fold defaultstate="expanded" desc="TYPE DEFINITIONS ">  
         
-/** TIMER1 Clock Pre-scalers */
+/* TIMER1 Clock Pre-scalers */
 typedef enum tagTIMER1_CLOCK_PRESCALER
 { 
-    /** TCKPS<1:0>: Timer1 Input Clock Pre-scale Select bits
+    /* TCKPS<1:0>: Timer1 Input Clock Pre-scale Select bits
         0b11 = 1:256 , 0b10 = 1:64 ,0b01 = 1:8 0b00 = 1:1                     */
     TIMER1_CLOCK_PRESCALER_256    = 3,
     TIMER1_CLOCK_PRESCALER_64     = 2,

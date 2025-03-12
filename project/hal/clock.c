@@ -178,17 +178,30 @@ void InitOscillator (void)
     
     /** Clock used for ADC  
     * Input Clock Selection (NOSC) = 5 :PLL1 FOUT output = 200 MHz
-    * Clock Division (INTDIV) = (4*2)
-    * Final Clock for ADC = 25 MHz */
-    CLK6DIVbits.INTDIV = 4;
+    * Clock Division (INTDIV) = (1*2)
+    * Final Clock for ADC = 100 MHz */
+    CLK6DIVbits.INTDIV = 1;
     CLK6CONbits.OE = 1;
     CLK6CONbits.ON = 1;
-    CLK6CONbits.NOSC = 5; 
+    CLK6CONbits.NOSC = 5;
     CLK6CONbits.OSWEN = 1; 
     while (CLK6CONbits.OSWEN);
     CLK6CONbits.DIVSWEN =1;
     while (CLK6CONbits.DIVSWEN);
     
+    /** Clock used for DAC and CMP  
+    * Input Clock Selection (NOSC) = 7 :PLL1 VCO DIV output = 800 MHz
+    * Clock Division (INTDIV) = (1*2)
+    * Final Clock for DAC = 400 MHz */
+    CLK7DIVbits.INTDIV = 1;
+    CLK7CONbits.OE = 1;
+    CLK7CONbits.ON = 1;
+    CLK7CONbits.NOSC = 7; 
+    CLK7CONbits.OSWEN = 1; 
+    while (CLK7CONbits.OSWEN);
+    CLK7CONbits.DIVSWEN =1;
+    while (CLK7CONbits.DIVSWEN);
+ 
     /** Clock used for UART  
     * Input Clock Selection (NOSC) = 5 :PLL1 FOUT output = 200 MHz
     * Clock Division (INTDIV) = (1*2)

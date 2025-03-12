@@ -53,14 +53,13 @@
 #include <stdbool.h>
 
 #include "board_service.h"
-#include "userparms.h"
-#include "delay.h"
 
 // </editor-fold>
 
 // <editor-fold defaultstate="collapsed" desc="VARIABLES">
+
 BUTTON_T buttonStartStop;
-BUTTON_T buttonSpeedHalfDouble;
+BUTTON_T buttonDirectionChange;
 
 uint16_t boardServiceISRCounter = 0;
 
@@ -88,7 +87,7 @@ static void ButtonScan(BUTTON_T * ,bool);
 */
 bool IsPressed_Button1(void)
 {
-    if (buttonStartStop.status)
+    if(buttonStartStop.status)
     {
         buttonStartStop.status = false;
         return true;
@@ -98,7 +97,6 @@ bool IsPressed_Button1(void)
         return false;
     }
 }
-
 /**
 * <B> Function: IsPressed_Button2() </B>
 *
@@ -113,9 +111,9 @@ bool IsPressed_Button1(void)
 */
 bool IsPressed_Button2(void)
 {
-    if (buttonSpeedHalfDouble.status)
+    if (buttonDirectionChange.status)
     {
-        buttonSpeedHalfDouble.status = false;
+        buttonDirectionChange.status = false;
         return true;
     }
     else
@@ -165,7 +163,7 @@ void BoardService(void)
 
         /* Button scanning loop for SW2 to enter into filed
             weakening mode */
-        ButtonScan(&buttonSpeedHalfDouble,BUTTON_SPEED_HALF_DOUBLE);
+        ButtonScan(&buttonDirectionChange,BUTTON_DIRECTION_CHANGE);
 
         boardServiceISRCounter = 0;
     }
@@ -244,33 +242,40 @@ void ButtonGroupInitialize(void)
     buttonStartStop.debounceCount = 0;
     buttonStartStop.state = false;
 
-    buttonSpeedHalfDouble.state = BUTTON_NOT_PRESSED;
-    buttonSpeedHalfDouble.debounceCount = 0;
-    buttonSpeedHalfDouble.state = false;
-
+    buttonDirectionChange.state = BUTTON_NOT_PRESSED;
+    buttonDirectionChange.debounceCount = 0;
+    buttonDirectionChange.state = false;
 }
 
 /**
-* <B> Function: InitPeripherals() </B>
+* <B> Function: HAL_InitPeripherals() </B>
 *
-* @brief Function to initialize the peripherals(Op-Amp, ADC and PMW)
+* @brief Function to initialize the peripherals(Op-Amp, ADC, CMP, DAC and PWM)
 *        
 * @param none.
 * @return none.
 * 
 * @example
-* <CODE> InitPeripherals(); </CODE>
+* <CODE> HAL_InitPeripherals(); </CODE>
 *
 */
-void InitPeripherals(void)
-{
+void HAL_InitPeripherals(void)
+{                
 #ifdef INTERNAL_OPAMP_CONFIG    
     OpampConfig();
 #endif
     
     InitializeADCs();
+    
+    InitializeCMPs();  
+    CMP3_ReferenceSet(CMP_REF_DCBUS_FAULT);
+    CMP3_ModuleEnable(true);
+
     /*400ms POR delay for IBUS_EXT signal coming from MCP651S in Dev Board*/
     __delay_ms(400);
+    
+    /* Make sure ADC does not generate interrupt while initializing parameters*/
+    MC1_DisableADCInterrupt();  
     
     InitPWMGenerators(); 
     
@@ -278,6 +283,7 @@ void InitPeripherals(void)
     ClearPWMIF();
     EnablePWMIF();
     
+    /*Timer 1 initialization*/
     TIMER1_Initialize();
     TIMER1_InputClockSet();
     TIMER1_PeriodSet(TIMER1_PERIOD_COUNT);
@@ -285,25 +291,84 @@ void InitPeripherals(void)
     TIMER1_InterruptFlagClear();
     TIMER1_InterruptEnable(); 
     TIMER1_ModuleStart();
-    
-    /* Make sure ADC does not generate interrupt while initializing parameters*/
-    DisableADCInterrupt();  
+
 }
 
 /**
-* <B> Function: DisablePWMOutputs() </B>
+* <B> Function: HAL_ResetPeripherals() </B>
 *
-* @brief Function to disable the PWM outputs by overriding to zero
+* @brief Function to reset the clear ADC interrupt and disable PWM outputs
 *        
 * @param none.
 * @return none.
 * 
 * @example
-* <CODE> DisablePWMOutputs(); </CODE>
+* <CODE> HAL_ResetPeripherals(); </CODE>
 *
 */
-void DisablePWMOutputs(void)
+void HAL_ResetPeripherals(void)
 {
+    MC1_ClearADCIF();
+    MC1_EnableADCInterrupt();
+    HAL_MC1PWMDisableOutputs();
+}
+
+/**
+* <B> Function: HAL_MC1PWMEnableOutputs() </B>
+*
+* @brief Function to enable the PWM outputs -  override is removed
+* PWM generator controls the PWM outputs now
+*        
+* @param none.
+* @return none.
+* 
+* @example
+* <CODE> HAL_MC1PWMEnableOutputs(); </CODE>
+*
+*/
+void HAL_MC1PWMEnableOutputs(void)
+{
+    /* Set PWM Duty Cycles */
+    PWM_PDC3 = 0;
+    PWM_PDC2 = 0;
+    PWM_PDC1 = 0;
+	
+	/*  0 = PWM Generator provides data for the PWM3H pin */
+    PG3IOCONbits.OVRENH = 0; 
+    /*  0 = PWM Generator provides data for the PWM3L pin */
+    PG3IOCONbits.OVRENL = 0; 
+    
+    /*  0 = PWM Generator provides data for the PWM2H pin */
+    PG2IOCONbits.OVRENH = 0;
+    /*  0 = PWM Generator provides data for the PWM2L pin */
+    PG2IOCONbits.OVRENL = 0; 
+    
+    /*  0 = PWM Generator provides data for the PWM1H pin */
+    PG1IOCONbits.OVRENH = 0;  
+    /*  0 = PWM Generator provides data for the PWM1L pin */
+    PG1IOCONbits.OVRENL = 0;     
+}
+
+/**
+* <B> Function: HAL_MC1PWMDisableOutputs() </B>
+*
+* @brief Function to disable the PWM outputs -  override is activated
+* OVRDAT<> register controls the PWM outputs now
+*        
+* @param none.
+* @return none.
+* 
+* @example
+* <CODE> HAL_MC1PWMDisableOutputs(); </CODE>
+*
+*/
+void HAL_MC1PWMDisableOutputs(void)
+{
+    /* Set PWM Duty Cycles */
+    PWM_PDC3 = 0;
+    PWM_PDC2 = 0;
+    PWM_PDC1 = 0; 
+    
     /** Set Override Data on all PWM outputs */
     /* 0b00 = State for PWM3H,L, if Override is Enabled */
     PG3IOCONbits.OVRDAT = 0;
@@ -329,148 +394,152 @@ void DisablePWMOutputs(void)
 }
 
 /**
-* <B> Function: EnablePWMOutputs() </B>
+* <B> Function: HAL_MC1PWMDutyCycleLimitCheck(MC_DUTYCYCLEOUT_T *) </B>
 *
-* @brief Function to enable the PWM outputs by disabling the override feature
+* @brief Function to limit the PWM duty cycles between Min and Max duty
 *        
-* @param none.
+* @param Pointer to the data structure containing duty cycles
 * @return none.
 * 
 * @example
-* <CODE> EnablePWMOutputs(); </CODE>
+* <CODE> HAL_MC1PWMDutyCycleLimitCheck(pPdc); </CODE>
 *
 */
-void EnablePWMOutputs(void)
-{    
-    /*  0 = PWM Generator provides data for the PWM3H pin */
-    PG3IOCONbits.OVRENH = 0; 
-    /*  0 = PWM Generator provides data for the PWM3L pin */
-    PG3IOCONbits.OVRENL = 0; 
-    
-    /*  0 = PWM Generator provides data for the PWM2H pin */
-    PG2IOCONbits.OVRENH = 0;
-    /*  0 = PWM Generator provides data for the PWM2L pin */
-    PG2IOCONbits.OVRENL = 0; 
-    
-    /*  0 = PWM Generator provides data for the PWM1H pin */
-    PG1IOCONbits.OVRENH = 0;  
-    /*  0 = PWM Generator provides data for the PWM1L pin */
-    PG1IOCONbits.OVRENL = 0;     
-}
-/**
-* <B> Function: ClearPWMPCIFault() </B>
-*
-* @brief Function to clear the PCI Fault by Software Termination
-*        
-* @param none.
-* @return none.
-* 
-* @example
-* <CODE> ClearPWMPCIFault(); </CODE>
-*
-*/
-void ClearPWMPCIFault(void)
+void HAL_MC1PWMDutyCycleLimitCheck(MC_DUTYCYCLEOUT_T *pdc)
 {
-    /*write of ?1? to SWTERM bit will produce a PCI Fault termination event*/
+    if(pdc->dutycycle3 < MIN_DUTY)
+    {
+        pdc->dutycycle3 = MIN_DUTY;
+    }
+    if(pdc->dutycycle2 < MIN_DUTY)
+    {
+        pdc->dutycycle2 = MIN_DUTY;
+    }
+    if(pdc->dutycycle1 < MIN_DUTY)
+    {
+        pdc->dutycycle1 = MIN_DUTY;
+    }
+
+    if(pdc->dutycycle3 > MAX_DUTY)
+    {
+        pdc->dutycycle3 = MAX_DUTY;
+    }
+    if(pdc->dutycycle2 > MAX_DUTY)
+    {
+        pdc->dutycycle2 = MAX_DUTY;
+    }
+    if(pdc->dutycycle1 > MAX_DUTY)
+    {
+        pdc->dutycycle1 = MAX_DUTY;
+    }
+}
+
+/**
+* <B> Function: HAL_PWM_DutyCycleRegister_Set(MC_DUTYCYCLEOUT_T *,uint32_t) </B>
+*
+* @brief Function to set the duty cycle values to the PDC registers
+*        
+* @param Pointer to the data structure containing duty cycles
+* @param offset value
+* @return none.
+* 
+* @example
+* <CODE> HAL_PWM_DutyCycleRegister_Set(pMC1Data->pPWMDuty,0); </CODE>
+*
+*/
+void HAL_PWM_DutyCycleRegister_Set(MC_DUTYCYCLEOUT_T *pPdc,uint32_t offset)
+{
+    
+    HAL_MC1PWMDutyCycleLimitCheck(pPdc);
+    PWM_PDC3 = (uint32_t)(pPdc->dutycycle3 + offset);
+    PWM_PDC2 = (uint32_t)(pPdc->dutycycle2 + offset);
+    PWM_PDC1 = (uint32_t)(pPdc->dutycycle1 + offset);
+}
+
+/**
+* <B> Function: HAL_PWM_PhaseRegister_Set(MC_DUTYCYCLEOUT_T *,uint32_t) </B>
+*
+* @brief Function to set the duty cycle values to the PHASE registers
+*        
+* @param Pointer to the data structure containing duty cycles
+* @param offset value
+* @return none.
+* 
+* @example
+* <CODE> HAL_PWM_PhaseRegister_Set(&pMC1Data->pSingleShunt->phase,(DEADTIME>>1)); </CODE>
+*
+*/
+void HAL_PWM_PhaseRegister_Set(MC_DUTYCYCLEOUT_T *pPhase,uint32_t offset)
+{
+    
+    HAL_MC1PWMDutyCycleLimitCheck(pPhase);
+    PWM_PHASE3 = (uint32_t)(pPhase->dutycycle3 + offset);
+    PWM_PHASE2 = (uint32_t)(pPhase->dutycycle2 + offset);
+    PWM_PHASE1 = (uint32_t)(pPhase->dutycycle1 + offset);
+}
+
+/**
+* <B> Function: HAL_TrapHandler(void) </B>
+*
+* @brief Function handle the traps
+*        
+* @param none.
+* @return none.
+* 
+* @example
+* <CODE> HAL_TrapHandler(); </CODE>
+*
+*/
+void HAL_TrapHandler(void)
+{
+    HAL_MC1PWMDisableOutputs();
+    while (1)
+    {
+        Nop();
+        Nop();
+        Nop();
+    }
+}
+
+/**
+* <B> Function: HAL_MC1MotorInputsRead(MCAPP_MEASURE_T *)  </B>
+*
+* @brief Function to assign the variables with respective ADC buffers
+*        
+* @param Pointer to the data structure containing measured currents.
+* @return none.
+* 
+* @example
+* <CODE> HAL_MC1MotorInputsRead(pMotorInputs); </CODE>
+*
+*/
+void HAL_MC1MotorInputsRead(MCAPP_MEASURE_T *pMotorInputs)
+{
+    pMotorInputs->measureCurrent.Ia = MC1_ADCBUF_IA;
+    pMotorInputs->measureCurrent.Ib = MC1_ADCBUF_IB;
+    pMotorInputs->measureCurrent.Ibus1 = ADCBUF_IBUS1;
+    pMotorInputs->measureCurrent.Ibus2 = ADCBUF_IBUS2;
+    pMotorInputs->measureCurrent.Ibus = ADCBUF_IBUS1;
+    pMotorInputs->measurePot = MC1_ADCBUF_POT;
+    pMotorInputs->measureVdc.count = MC_ADCBUF_VDC;
+}
+
+/**
+* <B> Function: HAL_MC1ClearPWMPCIFault(void)  </B>
+*
+* @brief Function to terminate the PWM Fault PWM event through software
+*        
+* @param none.
+* @return none.
+* 
+* @example
+* <CODE> HAL_MC1ClearPWMPCIFault(); </CODE>
+*
+*/
+void HAL_MC1ClearPWMPCIFault(void)
+{
+    /* write of '1' to SWTERM bit will produce a PCI Fault termination event */
     PG1FPCIbits.SWTERM = 1;
     PG2FPCIbits.SWTERM = 1;
-    PG3FPCIbits.SWTERM = 1;
-    
+    PG3FPCIbits.SWTERM = 1;  
 }
-/**
-* <B> Function: PWMDutyCycleSet(MC_DUTYCYCLEOUT_T *) </B>
-*
-* @brief Function to write the calculated duty to PDC register after limiting to 
-* maximum and minimum value
-*        
-* @param Pointer to the data structure containing PWM duty cycles.
-* @return none.
-* 
-* @example
-* <CODE> PWMDutyCycleSet(&pwmDutycycle); </CODE>
-*
-*/
-void PWMDutyCycleSet(MC_DUTYCYCLEOUT_T *pPwmDutycycle)
-{
-    pwmDutyCycleLimitCheck(pPwmDutycycle,(DEADTIME>>1),(LOOPTIME_TCY - (DEADTIME>>1)));  
-    PWM_PDC3 = pPwmDutycycle->dutycycle3;
-    PWM_PDC2 = pPwmDutycycle->dutycycle2;
-    PWM_PDC1 = pPwmDutycycle->dutycycle1;
-}
-
-/**
-* <B> Function: PWMDutyCycleSetDualEdge(MC_DUTYCYCLEOUT_T *, 
-*                                                     MC_DUTYCYCLEOUT_T *) </B>
-*
-* @brief Function to write the calculated duty to PDC and PHASE register after 
-* limiting to maximum and minimum value
-*        
-* @param Pointer to the data structure containing PWM duty cycles for PDC register.
-* @param Pointer to the data structure containing PWM duty cycles for PHASE register.
-* @return none.
-* 
-* @example
-* <CODE> PWMDutyCycleSetDualEdge(&pwmDutycycle1,&pwmDutycycle2); </CODE>
-*
-*/
-void PWMDutyCycleSetDualEdge(MC_DUTYCYCLEOUT_T *pPwmDutycycle1,MC_DUTYCYCLEOUT_T *pPwmDutycycle2)
-{
-    pwmDutyCycleLimitCheck(pPwmDutycycle1,(DEADTIME>>1),(LOOPTIME_TCY - (DEADTIME>>1)));
-    
-    PWM_PHASE3 = pPwmDutycycle1->dutycycle3 + (DEADTIME>>1);
-    PWM_PHASE2 = pPwmDutycycle1->dutycycle2 + (DEADTIME>>1);
-    PWM_PHASE1 = pPwmDutycycle1->dutycycle1 + (DEADTIME>>1);
-    
-    pwmDutyCycleLimitCheck(pPwmDutycycle2,(DEADTIME>>1),(LOOPTIME_TCY - (DEADTIME>>1)));
-    
-    PWM_PDC3 = pPwmDutycycle2->dutycycle3 - (DEADTIME>>1);
-    PWM_PDC2 = pPwmDutycycle2->dutycycle2 - (DEADTIME>>1);
-    PWM_PDC1 = pPwmDutycycle2->dutycycle1 - (DEADTIME>>1);
-}
-
-/**
-* <B> Function: pwmDutyCycleLimitCheck(MC_DUTYCYCLEOUT_T *,uint32_t, uint32_t) </B>
-*
-* @brief Function to write the calculated duty to PDC register after limiting to 
-* maximum and minimum value
-*        
-* @param Pointer to the data structure containing PWM duty cycles.
-* @param Minimum duty cycle.
-* @param Maximum duty cycle.
-* @return none.
-* 
-* @example
-* <CODE> pwmDutyCycleLimitCheck(&pwmDutycycle, min, max); </CODE>
-*
-*/
-void pwmDutyCycleLimitCheck (MC_DUTYCYCLEOUT_T *pPwmDutycycle,uint32_t min,uint32_t max)
-{
-    if (pPwmDutycycle->dutycycle1 < min)
-    {
-        pPwmDutycycle->dutycycle1 = min;
-    }
-    else if (pPwmDutycycle->dutycycle1 > max)
-    {
-        pPwmDutycycle->dutycycle1 = max;
-    }
-    
-    if (pPwmDutycycle->dutycycle2 < min)
-    {
-        pPwmDutycycle->dutycycle2 = min;
-    }
-    else if (pPwmDutycycle->dutycycle2 > max)
-    {
-        pPwmDutycycle->dutycycle2 = max;
-    }
-    
-    if (pPwmDutycycle->dutycycle3 < min)
-    {
-        pPwmDutycycle->dutycycle3 = min;
-    }
-    else if (pPwmDutycycle->dutycycle3 > max)
-    {
-        pPwmDutycycle->dutycycle3 = max;
-    }
-}
-
-// </editor-fold>

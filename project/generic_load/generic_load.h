@@ -1,11 +1,11 @@
 // <editor-fold defaultstate="collapsed" desc="Description/Instruction ">
 /**
- * @file general.h
+ * @file generic_load.h
  *
- * @brief This header file lists data type definitions and interface functions 
- * of the algebraic equations.
- *
- * Component: GENERAL
+ * @brief This module initializes data structure variable type definitions of 
+ * data structure
+ * 
+ * Component: GENERIC LOAD
  *
  */
 // </editor-fold>
@@ -45,29 +45,39 @@
 *******************************************************************************/
 // </editor-fold>
 
-#ifndef __GENERAL_H
-#define __GENERAL_H
+
+#ifndef GENERIC_LOAD_H
+#define	GENERIC_LOAD_H
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "clarke_park.h"
-
+#include "generic_load_types.h"
+    
 // </editor-fold>
 
-#ifdef __cplusplus  // Provide C++ Compatability
-    extern "C" {
-#endif
 
+// <editor-fold defaultstate="collapsed" desc="DEFINITIONS ">   
+    
+#define MCAPP_LOAD_T                MCAPP_GENERIC_LOAD_T
+    
+// </editor-fold>
+    
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
-void SaturateFloat( float * const , const float , const float);
-float SquareFloat(const float);
-void LowPassFilter(float,float,float*);
 
+void MCAPP_GenericLoadInit (MCAPP_LOAD_T *);
+void MCAPP_GenericLoadStateMachine (MCAPP_LOAD_T *);
+uint8_t MCAPP_IsGenericLoadReadyToStart (MCAPP_LOAD_T *);
+uint8_t MCAPP_IsGenericLoadReadyToStop (MCAPP_LOAD_T *);
+    
 // </editor-fold>
-#ifdef __cplusplus  // Provide C++ Compatibility
-    }
+
+#ifdef	__cplusplus
+}
 #endif
-#endif      // end of __GENERAL_H
+
+#endif	/* GENERIC_LOAD_H */
+
