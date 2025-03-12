@@ -1,11 +1,9 @@
 // <editor-fold defaultstate="collapsed" desc="Description/Instruction ">
 /**
- * @file control.h
+ * @file util.h
  *
- * @brief This header file lists data type definitions and variables required for
- * open loop and closed loop control of the motor.
+ * @brief 
  *
- * Component: FOC
  *
  */
 // </editor-fold>
@@ -45,90 +43,111 @@
 *******************************************************************************/
 // </editor-fold>
 
-#ifndef __CONTROL_H
-#define __CONTROL_H
+#ifndef UTIL_H
+#define	UTIL_H
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <math.h>
 
+// </editor-fold>    
+
+    
+// <editor-fold defaultstate="expanded" desc="Definitions ">
+        
+#define SQRT_3         1.732050807568877f  /* sqrt(3) */
+#define Q15_MAX        32767.0f
+#define Q30_MAX        1073741824.0f
+    
+#define Q15_TO_RADIAN       (float)(M_PI/Q15_MAX)     
+   
 // </editor-fold>
 
-#ifdef __cplusplus  // Provide C++ Compatability
-    extern "C" {
-#endif
-
-// <editor-fold defaultstate="collapsed" desc="TYPE DEFINITIONS ">
-
-/**
- * Control Parameter data type
- */
-typedef struct
-{
-    /** Reference velocity */
-    float   VelRef;
-    /** Vd flux reference value */
-    float   vdRef;
-    /** Vq torque reference value */
-    float   vqRef;
-    /** Ramp for speed reference value */
-	float	refRamp;
-    /** Speed of the ramp */
-	float   diffSpeed;
-    /** Target Speed*/
-    float   targetSpeed;
-    /** The Speed Control Loop will be executed only every speedRampCount */
-    float   speedRampCount;
-
-} CTRL_PARM_T;
-
-/**
- * General system flag data type
- */
-typedef union
+/** Signed 16/32 bit alias union */
+typedef union tagSX1632_t
 {
     struct
     {
-        /** Run motor indication flag */
-        unsigned RunMotor:1;
-        /** Open loop/closed loop indication flag */
-        unsigned OpenLoop:1;
-        /** Mode changed indication flag - from open to closed loop */
-        unsigned ChangeMode:1;
-        /** Field weakening indication */
-        unsigned ChangeSpeed:1;
-        /** Unused bits */
-        unsigned    :28;
-    }bits;
-    uint32_t Word;
-} UGF_T;
+        uint16_t lo;    /** lower 16 bits */
+        int16_t  hi;    /** upper 16 bits */ 
+    } x16;              /** access as 16-bit values */
+    int32_t x32;        /** access as 32-bit values */ 
+} sx1632_t;
+   
+
+// <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
 /**
- * Motor Startup Parameter data type
-*/
-typedef struct
+ *
+ * 
+ * @param a first input
+ * @return (x * x)
+ */
+inline static float SquareFloat(const float x)
 {
-    /** Start up ramp in open loop. */
-    float startupRamp;
-    /** counter that is incremented in CalculateParkAngle() up to LOCK_TIME,*/
-    int16_t startupLock;
-    /* Start up ramp increment */
-    float tuningAddRampup;
-    float tuningDelayRampup;
-} MOTOR_STARTUP_DATA_T;
+    return ( x * x );
+}
 
-// </editor-fold>
-
-// <editor-fold defaultstate="expanded" desc=" VARIABLES ">
-
-extern UGF_T uGF;
-extern CTRL_PARM_T CtrlParm;
-extern MOTOR_STARTUP_DATA_T motorStartUpData;
-
-// </editor-fold>
-
-#ifdef __cplusplus  // Provide C++ Compatibility
+/**
+* <B> Function: SaturateFloat( float * const, const float, const float) </B>
+*
+* @brief Function saturates a float value between the minimum and maximum values.
+* 
+* @param pointer to the input.
+* @param minimum value.
+* @param maximum value.
+* @return none.
+* 
+* @example
+* <CODE> SaturateFloat( &x, -1.0f, 0.0f ); </CODE>
+*
+*/
+inline static void SaturateFloat( float * const input, const float min, const float max  )
+{
+    if( max < (*input ))
+    {
+        *input = max;
     }
+    else if( min > (*input ))
+    {
+        *input = min;
+    }
+    else
+    {
+
+    }
+}
+
+/**
+* <B> Function:  LowPassFilter (float ,float ,float * ) </B>
+*
+* @brief Function runs 1st order backward Euler filter operation on the input.
+*        
+* @param input signal
+* @param Filter coefficient value
+* @param pointer to output signal
+*
+* @example
+* <CODE> LowPassFilter (input, filterCoeff,*output); </CODE>
+*
+*/
+
+inline static void LowPassFilter (float input, float filterCoeff, float* output)
+{
+	*output = *output+ ((input - *output) * filterCoeff) ;
+}
+
+// </editor-fold>
+
+#ifdef	__cplusplus
+}
 #endif
-#endif      // end of __CONTROL_H
+
+#endif	/* UTIL_H */
+

@@ -54,16 +54,21 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <xc.h>
 
-#include "svm.h"
-#include "port_config.h"
-#include "uart1.h"
-#include "pwm.h"
 #include "clock.h"
+#include "cmp.h"
+#include "pwm.h"
 #include "adc.h"
-#include "measure.h"
+#include "port_config.h"
 #include "timer1.h"
+#include "measure.h"
+#include "svm.h"
+#include "singleshunt.h"
+#include "delay.h"
+#include "mc1_user_params.h"
+#include "mc1_calc_params.h"
 
 // </editor-fold>
 
@@ -80,9 +85,9 @@
  */
 typedef enum tagBUTTON_STATE
 {
-    BUTTON_NOT_PRESSED = 0, // wait for button to be pressed
-    BUTTON_PRESSED = 1, // button was pressed, check if short press / long press
-    BUTTON_DEBOUNCE = 2
+    BUTTON_NOT_PRESSED = 0, /* wait for button to be pressed */
+    BUTTON_PRESSED = 1,     /* button was pressed, check if short press or long press */
+    BUTTON_DEBOUNCE = 2     /* button de-bounced after pressing */
 } BUTTON_STATE;
     
 // *****************************************************************************
@@ -102,33 +107,43 @@ typedef struct
 // </editor-fold>
 
 // <editor-fold defaultstate="expanded" desc="DEFINITIONS/CONSTANTS ">
+/* Heart beat LED - specify in no.of milli second */
+#define HEART_BEAT_LED_mSec     250
+/* Rate at which board service i executed**/
+/* Specify the board service tick in milli second */
+#define BOARD_SERVICE_TICK_mSec 1
+/* Button De-bounce in milli Seconds */
+#define BUTTON_DEBOUNCE_mSec    30
 
-/** Button De-bounce in milli Seconds */
-#define	BUTTON_DEBOUNCE_COUNT      30
-/** The board service Tick is set as 1 millisecond - specify the count in terms 
-    PWM ISR cycles (i.e. BOARD_SERVICE_TICK_COUNT = 1 milli Second / PWM period)*/
-#define BOARD_SERVICE_TICK_COUNT   20
-/* Heart beat LED Counts - specify in no.of milli secs*/
-#define HEART_BEAT_LED_COUNT       250
+/* Heart beat LED count is incremented in every Timer 1 interrupt */
+#define HEART_BEAT_LED_COUNT        (HEART_BEAT_LED_mSec*1000/TIMER1_PERIOD_uSec)
+/* Board service tick count is incremented in every Timer 1 interrupt */
+#define BOARD_SERVICE_TICK_COUNT    (BOARD_SERVICE_TICK_mSec*1000/TIMER1_PERIOD_uSec)
+/* Button De-bounce count is incremented at every board service function call */
+#define BUTTON_DEBOUNCE_COUNT       (BUTTON_DEBOUNCE_mSec/BOARD_SERVICE_TICK_mSec)
 
 // </editor-fold>
 
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
-void DisablePWMOutputs(void);
-void EnablePWMOutputs(void);
-void ClearPWMPCIFault(void);
 void BoardServiceInit(void);
 void BoardServiceStepIsr(void);
 void BoardService(void);
 bool IsPressed_Button1(void);
 bool IsPressed_Button2(void);
-void InitPeripherals(void);
-void PWMDutyCycleSetDualEdge(MC_DUTYCYCLEOUT_T *,MC_DUTYCYCLEOUT_T *);
-void PWMDutyCycleSet(MC_DUTYCYCLEOUT_T *);
-void pwmDutyCycleLimitCheck(MC_DUTYCYCLEOUT_T *,uint32_t,uint32_t);
+void HAL_InitPeripherals(void);
+void HAL_ResetPeripherals(void);
 
-// </editor-fold>
+void HAL_MC1PWMDisableOutputs(void);
+void HAL_MC1PWMEnableOutputs(void);
+void HAL_MC1PWMDutyCycleLimitCheck(MC_DUTYCYCLEOUT_T *);
+void HAL_PWM_DutyCycleRegister_Set(MC_DUTYCYCLEOUT_T *,uint32_t);
+void HAL_PWM_PhaseRegister_Set(MC_DUTYCYCLEOUT_T *,uint32_t);
+void HAL_MC1MotorInputsRead(MCAPP_MEASURE_T *);
+
+void HAL_MC1ClearPWMPCIFault(void);
+void HAL_TrapHandler(void);
+// </editor-fold
 
 #ifdef __cplusplus
 }

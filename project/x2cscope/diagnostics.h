@@ -52,6 +52,8 @@
 extern "C" {
 #endif
 
+#define ENABLE_DIAGNOSTICS
+
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
     
 /**

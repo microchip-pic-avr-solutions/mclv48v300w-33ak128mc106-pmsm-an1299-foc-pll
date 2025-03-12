@@ -62,27 +62,31 @@
 // <editor-fold defaultstate="collapsed" desc="TYPE DEFINITIONS ">
 
 /**
- * PI Controller State data type
+ * PI Controller parameters data type
 */
 typedef struct
 {
-    /** Integrator sum */
-    float integrator;
-
-    /** Proportional gain co-efficient term */
+    /* Proportional gain co-efficient term */
     float kp;
 
-    /** Integral gain co-efficient term */
-    float ki;
-
-    /** Excess gain co-efficient term */
-    float kc;
-
-    /** Maximum output limit */
+    /* Integral gain co-efficient term */
+    float ki;     
+    
+    /* Maximum output limit */
     float outMax;
 
-    /** Minimum output limit */
+    /* Minimum output limit */
     float outMin;
+    
+}MC_PIPARAMS_T ;     
+
+/**
+ * PI Controller state variable datatype
+*/
+typedef struct
+{
+    /* Integrator sum */
+    float integrator;
 
 } MC_PISTATE_T;
 
@@ -91,31 +95,25 @@ typedef struct
 */
 typedef struct
 {
-    /** PI state as input parameter to the PI controller */
-    MC_PISTATE_T piState;
-    /** Input reference to the PI controller */
+    /* Parameters to the PI controller */
+    MC_PIPARAMS_T param;
+    /* State variables to the PI controller */
+    MC_PISTATE_T stateVar;
+    /* Input reference to the PI controller */
     float   inReference;
-    /** Input measured value */
+    /* Input measured value */
     float   inMeasure;
+    /* Output of the PI controller */
+    float   output;
+} MC_PI_T;
 
-} MC_PIPARMIN_T;
-
-/**
- * PI Controller Output data type
-*/
-typedef struct
-{
-    /** Output of the PI controller */
-    float out;
-} MC_PIPARMOUT_T;
 
 // </editor-fold>
 
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
-void MC_ControllerPIUpdate(MC_PIPARMIN_T *, MC_PISTATE_T *,
-                                                              MC_PIPARMOUT_T *);
-
+void MC_ControllerPIUpdate(MC_PI_T *);
+void MC_ControllerPIReset(MC_PI_T *, float resetValue);
 // </editor-fold>
 
 #ifdef __cplusplus  // Provide C++ Compatibility

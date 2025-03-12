@@ -93,131 +93,139 @@ void SingleShunt_InitializeParameters(SINGLE_SHUNT_PARM_T *pSingleShunt)
 * <B> Function: SingleShunt_CalculateSpaceVectorPhaseShifted(MC_ABC_T *,
 *                                           uint16_t,SINGLE_SHUNT_PARM_T *) </B>
 *
-* @brief Function to calculate Va,Vb and Vc.
+* @brief Function to calculate SVM duty cycles after adjusting the duty to measure 
+* the bus current during active vectors.
 *
 * @param Pointer to the data structure containing Va,Vb & Vc
 * @param PWM Period
 * @param Pointer to the data structure containing Single Shunt parameters.
+* @return SVM sector.
 * 
-* @return none.
 * @example
-* <CODE> SingleShunt_CalculateSpaceVectorPhaseShifted(&abc,
+* <CODE> sector = SingleShunt_CalculateSpaceVectorPhaseShifted(&abc,
 *                                              pwmPeriod,&singleShunt); </CODE>
 *
 */
-void SingleShunt_CalculateSpaceVectorPhaseShifted(MC_ABC_T *abc,
+uint8_t SingleShunt_CalculateSpaceVectorPhaseShifted(MC_ABC_T *pABC,
                                     float iPwmPeriod,
                                     SINGLE_SHUNT_PARM_T *pSingleShunt)
 {
-    asm volatile("push  CORCON");
-    CORCON = 0x00E2;
     
-    MC_DUTYCYCLEOUT_T *pdcout1 = &pSingleShunt->pwmDutycycle1;
-    MC_DUTYCYCLEOUT_T *pdcout2 = &pSingleShunt->pwmDutycycle2;   
-    if (abc->a >= 0)
+    MC_DUTYCYCLEOUT_T *pdcout1 = &pSingleShunt->phase;
+    MC_DUTYCYCLEOUT_T *pdcout2 = &pSingleShunt->pdc;  
+
+pSingleShunt->sectorSVM = 0;
+    
+    /*SVM Sector Identification*/
+    if (pABC->a > 0.0)
     {
-        /* (xx1) */
-        if (abc->b >= 0)
-        {
-            /* (x11)
-             * Must be Sector 3 since Sector 7 not allowed
-             * Sector 3: (0,1,1)  0-60 degrees */
-            pSingleShunt->sectorSVM  = 3; 
-            pSingleShunt->T1 = abc->a;
-            pSingleShunt->T2 = abc->b;
-            SingleShunt_CalculateSwitchingTime(&singleShuntParam,iPwmPeriod);
+        pSingleShunt->sectorSVM = pSingleShunt->sectorSVM + 1;
+    }
+    if (pABC->b > 0.0)
+    {
+        pSingleShunt->sectorSVM = pSingleShunt->sectorSVM + 2;
+    }
+    if (pABC->c > 0.0)
+    {
+        pSingleShunt->sectorSVM = pSingleShunt->sectorSVM + 4;
+    }
+    
+    switch(pSingleShunt->sectorSVM)
+    {
+        case 1:
+            /** Sector 1: (0,0,1)  60-120 degrees */
+            pSingleShunt->T2 = -pABC->b;
+            pSingleShunt->T1 = -pABC->c;
+
+            SingleShunt_CalculateSwitchingTime(pSingleShunt,iPwmPeriod);
+            
+            pdcout1->dutycycle1 = pSingleShunt->Tb1;
+            pdcout1->dutycycle2 = pSingleShunt->Ta1;
+            pdcout1->dutycycle3 = pSingleShunt->Tc1;
+            pdcout2->dutycycle1 = pSingleShunt->Tb2;
+            pdcout2->dutycycle2 = pSingleShunt->Ta2;
+            pdcout2->dutycycle3 = pSingleShunt->Tc2;
+        break;
+        case 2:
+            /** Sector 2: (0,1,0)  300-360 degrees */
+            pSingleShunt->T2 = -pABC->c;
+            pSingleShunt->T1 = -pABC->a;
+
+            SingleShunt_CalculateSwitchingTime(pSingleShunt,iPwmPeriod);
+            
+            pdcout1->dutycycle1 = pSingleShunt->Ta1;
+            pdcout1->dutycycle2 = pSingleShunt->Tc1;
+            pdcout1->dutycycle3 = pSingleShunt->Tb1;
+            pdcout2->dutycycle1 = pSingleShunt->Ta2;
+            pdcout2->dutycycle2 = pSingleShunt->Tc2;
+            pdcout2->dutycycle3 = pSingleShunt->Tb2;
+        break;
+        case 3:
+            /** Sector 3: (0,1,1)  0-60 degrees */
+            pSingleShunt->T2 = pABC->b;
+            pSingleShunt->T1 = pABC->a;
+
+            SingleShunt_CalculateSwitchingTime(pSingleShunt,iPwmPeriod);
+            
             pdcout1->dutycycle1 = pSingleShunt->Ta1;
             pdcout1->dutycycle2 = pSingleShunt->Tb1;
             pdcout1->dutycycle3 = pSingleShunt->Tc1;
             pdcout2->dutycycle1 = pSingleShunt->Ta2;
             pdcout2->dutycycle2 = pSingleShunt->Tb2;
             pdcout2->dutycycle3 = pSingleShunt->Tc2;
-        }
-        else
-        {
-            /* (x01) */
-            if (abc->c >= 0)
-            {
-                /* Sector 5: (1,0,1)  120-180 degrees */
-                pSingleShunt->sectorSVM  = 5;
-                pSingleShunt->T1 = abc->c;
-                pSingleShunt->T2 = abc->a;
-                SingleShunt_CalculateSwitchingTime(&singleShuntParam,iPwmPeriod);
-                pdcout1->dutycycle1 = pSingleShunt->Tc1;
-                pdcout1->dutycycle2 = pSingleShunt->Ta1;
-                pdcout1->dutycycle3 = pSingleShunt->Tb1;
-                pdcout2->dutycycle1 = pSingleShunt->Tc2;
-                pdcout2->dutycycle2 = pSingleShunt->Ta2;
-                pdcout2->dutycycle3 = pSingleShunt->Tb2;
-            }
-            else
-            {
-                /* Sector 1: (0,0,1)  60-120 degrees */
-                pSingleShunt->sectorSVM  = 1;
-                pSingleShunt->T1 = -abc->c;
-                pSingleShunt->T2 = -abc->b;
-                SingleShunt_CalculateSwitchingTime(&singleShuntParam,iPwmPeriod);
-                pdcout1->dutycycle1 = pSingleShunt->Tb1;
-                pdcout1->dutycycle2 = pSingleShunt->Ta1;
-                pdcout1->dutycycle3 = pSingleShunt->Tc1;
-                pdcout2->dutycycle1 = pSingleShunt->Tb2;
-                pdcout2->dutycycle2 = pSingleShunt->Ta2;
-                pdcout2->dutycycle3 = pSingleShunt->Tc2;
-            }
-        }
-    }
-    else
-    {
-        /* (xx0) */
-        if (abc->b >= 0)
-        {
-            /* (x10) */
-            if (abc->c >= 0)
-            {
-                /* Sector 6: (1,1,0)  240-300 degrees */
-                pSingleShunt->sectorSVM  = 6;
-                pSingleShunt->T1 = abc->b;
-                pSingleShunt->T2 = abc->c;
-                SingleShunt_CalculateSwitchingTime(&singleShuntParam,iPwmPeriod);
-                pdcout1->dutycycle1 = pSingleShunt->Tb1;
-                pdcout1->dutycycle2 = pSingleShunt->Tc1;
-                pdcout1->dutycycle3 = pSingleShunt->Ta1;
-                pdcout2->dutycycle1 = pSingleShunt->Tb2;
-                pdcout2->dutycycle2 = pSingleShunt->Tc2;
-                pdcout2->dutycycle3 = pSingleShunt->Ta2;
-            }
-            else
-            {
-                /* Sector 2: (0,1,0)  300-0 degrees */
-                pSingleShunt->sectorSVM  = 2;
-                pSingleShunt->T1 = -abc->a;
-                pSingleShunt->T2 = -abc->c;
-                SingleShunt_CalculateSwitchingTime(&singleShuntParam,iPwmPeriod);
-                pdcout1->dutycycle1 = pSingleShunt->Ta1;
-                pdcout1->dutycycle2 = pSingleShunt->Tc1;
-                pdcout1->dutycycle3 = pSingleShunt->Tb1;
-                pdcout2->dutycycle1 = pSingleShunt->Ta2;
-                pdcout2->dutycycle2 = pSingleShunt->Tc2;
-                pdcout2->dutycycle3 = pSingleShunt->Tb2;
-            }
-        }
-        else
-        {
-            /* (x00)
-             * Must be Sector 4 since Sector 0 not allowed
-             * Sector 4: (1,0,0)  180-240 degrees */
-            pSingleShunt->sectorSVM  = 4;
-            pSingleShunt->T1 = -abc->b;
-            pSingleShunt->T2 = -abc->a;
-            SingleShunt_CalculateSwitchingTime(&singleShuntParam,iPwmPeriod);
+        break;
+        case 4:
+            /* Sector 4: (1,0,0)  180-240 degrees */
+            pSingleShunt->T2 = -pABC->a;
+            pSingleShunt->T1 = -pABC->b;
+
+            SingleShunt_CalculateSwitchingTime(pSingleShunt,iPwmPeriod);
+            
             pdcout1->dutycycle1 = pSingleShunt->Tc1;
             pdcout1->dutycycle2 = pSingleShunt->Tb1;
             pdcout1->dutycycle3 = pSingleShunt->Ta1;
             pdcout2->dutycycle1 = pSingleShunt->Tc2;
             pdcout2->dutycycle2 = pSingleShunt->Tb2;
             pdcout2->dutycycle3 = pSingleShunt->Ta2;
-        }
-    }
+        break;
+        case 5:
+            /** Sector 5: (1,0,1)  120-180 degrees */
+            pSingleShunt->T2 = pABC->a;
+            pSingleShunt->T1 = pABC->c;
+
+            SingleShunt_CalculateSwitchingTime(pSingleShunt,iPwmPeriod);
+            
+            pdcout1->dutycycle1 = pSingleShunt->Tc1;
+            pdcout1->dutycycle2 = pSingleShunt->Ta1;
+            pdcout1->dutycycle3 = pSingleShunt->Tb1;
+            pdcout2->dutycycle1 = pSingleShunt->Tc2;
+            pdcout2->dutycycle2 = pSingleShunt->Ta2;
+            pdcout2->dutycycle3 = pSingleShunt->Tb2;
+        break;
+        case 6:
+            /** Sector 6: (1,1,0)  240-300 degrees */
+            pSingleShunt->T2 = pABC->c;
+            pSingleShunt->T1 = pABC->b;
+
+            SingleShunt_CalculateSwitchingTime(pSingleShunt,iPwmPeriod);
+            
+            pdcout1->dutycycle1 = pSingleShunt->Tb1;
+            pdcout1->dutycycle2 = pSingleShunt->Tc1;
+            pdcout1->dutycycle3 = pSingleShunt->Ta1;
+            pdcout2->dutycycle1 = pSingleShunt->Tb2;
+            pdcout2->dutycycle2 = pSingleShunt->Tc2;
+            pdcout2->dutycycle3 = pSingleShunt->Ta2;
+        break;
+        default:
+            pdcout1->dutycycle1 = 0;
+            pdcout1->dutycycle2 = 0;
+            pdcout1->dutycycle3 = 0;
+            pdcout2->dutycycle1 = 0;
+            pdcout2->dutycycle2 = 0;
+            pdcout2->dutycycle3 = 0;
+        break;
+    }   /* End Of switch - case */
+    
     /* Calculate two triggers for the ADC that will fall in between PWM
         so a valid measurement is done using a single shunt resistor.
         tDelaySample is added as a delay so no erroneous measurement is taken*/
@@ -228,17 +236,17 @@ void SingleShunt_CalculateSpaceVectorPhaseShifted(MC_ABC_T *abc,
     pSingleShunt->trigger2 = (iPwmPeriod+  pSingleShunt->tDelaySample);
     pSingleShunt->trigger2 = pSingleShunt->trigger2 - ((pSingleShunt->Tb1 + pSingleShunt->Tc1)/2.0) ;
     
-    SINGLE_SHUNT_TRIGGER1 = singleShuntParam.trigger1;
-    SINGLE_SHUNT_TRIGGER2 = singleShuntParam.trigger2;
+    SINGLE_SHUNT_TRIGGER1 = (uint32_t)(pSingleShunt->trigger1);
+    SINGLE_SHUNT_TRIGGER2 = (uint32_t)(pSingleShunt->trigger2);
 
-    asm volatile("pop  CORCON");
-
+    return pSingleShunt->sectorSVM;
 }
 /**
 * <B> Function: SingleShunt_CalculateSwitchingTime(SINGLE_SHUNT_PARM_T *,
 *                                                                 uint16_t) </B>
 *
-* @brief Function to calculate SVM T1,T2 and T0.
+* @brief Function to calculate SVM timings after adjusting the vectors for 
+* measuring the bus current through an active vector
 *
 * @param Pointer to the data structure containing Single Shunt parameters.
 * @param PWM Period
@@ -258,7 +266,7 @@ inline static void SingleShunt_CalculateSwitchingTime(SINGLE_SHUNT_PARM_T *pSing
 
     pSingleShunt->T1 = iPwmPeriod * pSingleShunt->T1;
     pSingleShunt->T2 = iPwmPeriod * pSingleShunt->T2;
-    pSingleShunt->T7 = (iPwmPeriod-pSingleShunt->T1-pSingleShunt->T2)/2;
+    pSingleShunt->T7 = (iPwmPeriod-pSingleShunt->T1-pSingleShunt->T2)/2.0;
 
 	/* If PWM counter is already counting down, in which case any modification to 
         duty cycles will take effect until PWM counter starts counting up again. 
@@ -357,9 +365,9 @@ void SingleShunt_PhaseCurrentReconstruction(SINGLE_SHUNT_PARM_T *pSingleShunt)
             pSingleShunt->Ia = -pSingleShunt->Ic - pSingleShunt->Ib;
         break;
         default:
-            pSingleShunt->Ic = 0; 
-            pSingleShunt->Ib = 0;
-            pSingleShunt->Ia = 0;
+            pSingleShunt->Ic = 10; 
+            pSingleShunt->Ib = 10;
+            pSingleShunt->Ia = 10;
         break;
     }
 }

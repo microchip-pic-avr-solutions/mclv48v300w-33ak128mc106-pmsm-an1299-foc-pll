@@ -1,11 +1,11 @@
 // <editor-fold defaultstate="collapsed" desc="Description/Instruction ">
 /**
- * @file estim.h
+ * @file motor_control_types.h
  *
- * @brief This header file lists data type definitions and interface functions 
- * of the PLL estimator
+ * @brief This module holds variable type definitions of data structure holding
+ * Motor control parameters.
  *
- * Component: ESTIMATOR - PLL
+ * Component: FOC
  *
  */
 // </editor-fold>
@@ -45,8 +45,13 @@
 *******************************************************************************/
 // </editor-fold>
 
-#ifndef __ESTIM_H
-#define __ESTIM_H
+
+#ifndef __MOTOR_CONTROL_TYPES_H
+#define __MOTOR_CONTROL_TYPES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
 
@@ -55,88 +60,63 @@
 
 // </editor-fold>
 
-#ifdef __cplusplus  // Provide C++ Compatability
-    extern "C" {
-#endif
-
-// <editor-fold defaultstate="collapsed" desc="TYPE DEFINITIONS ">
+// <editor-fold defaultstate="collapsed" desc="VARIABLE TYPE DEFINITIONS ">
 
 /**
- * State variables for PLL estimator
+ * ABC reference frame data type
  */
 typedef struct
 {
-    /** Integration constant */
-    float   DeltaT;
-    /** angle of estimation */
-    float   Rho;
-    /** internal variable for angle */
-    float  	RhoStateVar;
-    /** primary speed estimation */
-    float   OmegaMr;
-    /** last value for Ialpha */
-    float   LastIalpha;
-    /** last value for Ibeta */
-    float   LastIbeta;
-    /** difference Ialpha */
-    float   dIalpha;
-    /** difference Ibeta */
-    float   dIbeta;
-    /** dI*Ls/dt alpha */
-	float	VIndalpha;
-    /** dI*Ls/dt beta */
-	float	VIndbeta;
-    /** BEMF d filtered */
-	float	Esdf;
-    /** BEMF q filtered */
-	float	Esqf;
-    /** filter constant for d-q BEMF */
-	float	KfilterEsdq;
-    /** Estimated speed */
-	float   VelEstim;
-    /** Filter constant for Estimated speed */
-	float   VelEstimFilterK;
-    /** Value from last control step Ialpha */
-    float   LastValpha;
-    /** Value from last control step Ibeta */
-    float   LastVbeta;
-    /** dIalphabeta/dt */
-	float	DIlimitLS;
-    /** estimated angle initial offset */
-	float   RhoOffset;
+    /* Phase A component */
+    float   a;
+    /* Phase B component */
+    float   b;
+    /* Phase C component */
+    float   c;
 
-} tEstimParm;
+} MC_ABC_T;
 
 /**
- * Motor Parameters used by the PLL estimator
- */
+ * Sine-Cosine data type
+*/
 typedef struct
 {
-    /** Rs value - stator resistance */
-	float	Rs;
-    /** Ls/dt value - stator inductance / dt - variable with speed */
-	float	LsDt;
-    /** InvKfi constant value ( InvKfi = Omega/BEMF ) */
-	float	InvKFi;
+    /* Cosine component */
+    float cos;
+    /* Sine component */
+    float sin;
 
-} tMotorEstimParm;
+} MC_SINCOS_T;
+
+/**
+ * Angle data type
+*/
+typedef struct
+{
+    /* Angle in counts */
+    int16_t counts;
+    /* Angle in radians */
+    float radian;
+
+} MC_ANGLE_T;
+
+/**
+ * Speed data type
+*/
+typedef struct
+{
+    /* Rotor speed in RPM */
+    float RPM;
+    
+    /* speed in radians per sec */
+    float radpersec;
+
+} MC_SPEED_T;
 
 // </editor-fold>
 
-// <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
-
-void	Estim(void);
-void	InitEstimParm(void);
-
-// </editor-fold>
-
-// <editor-fold defaultstate="expanded" desc=" VARIABLES ">
-
-extern tEstimParm 	EstimParm;
-
-// </editor-fold>
-
-#ifdef __cplusplus  // Provide C++ Compatibility
-    }
+#ifdef __cplusplus
+}
 #endif
-#endif      // end of __ESTIM_H
+
+#endif /* end of __MOTOR_CONTROL_TYPES_H */

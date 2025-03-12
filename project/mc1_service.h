@@ -1,12 +1,13 @@
 // <editor-fold defaultstate="collapsed" desc="Description/Instruction ">
 /**
- * @file fdweak.c
- *
- * @brief This module implements equation based field weakening of PMSM.
- *
- * Component: FIELD WEAKENING
- *
- */
+* @file mc1_service.h
+*
+* @brief This module has variable type definitions of data structure
+* holding motor control parameters and enumerated constants.
+*
+* Component: MOTOR CONTROL APPLICATION
+*
+*/
 // </editor-fold>
 
 // <editor-fold defaultstate="collapsed" desc="Disclaimer ">
@@ -44,77 +45,32 @@
 *******************************************************************************/
 // </editor-fold>
 
+#ifndef MC1_SERVICE_H
+#define	MC1_SERVICE_H
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
 
 #include <stdint.h>
-#include <math.h>
-
-#include "fdweak.h"
-#include "board_service.h"
-#include "userparms.h"
-#include "general.h"
+#include <stdbool.h>
 
 // </editor-fold>
-
-// <editor-fold defaultstate="collapsed" desc="VARIABLES">
-
-FDWEAK_PARM_T fdWeakParm;
-
-// </editor-fold>
-
+    
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
-/**
-* <B> Function: InitFWParams() </B>
-*
-* @brief Function initializes the Field Weakening Parameters.
-*        
-* @param none.
-* @return none.
-* 
-* @example
-* <CODE> InitFWParams(); </CODE>
-*
-*/
-void InitFWParams(void)
-{
-    fdWeakParm.IdRef = 0.0;
-    fdWeakParm.fwNum = 0.0;
-    fdWeakParm.fwDen = 1.0;
-}
-/**
-* <B> Function: FieldWeakening(float, float ) </B>
-*
-* @brief Function implements equation based field weakening algorithm.
-*        
-* @param motor speed.
-* @return d-axis current reference corresponding to the motor speed.
-* 
-* @example
-* <CODE> id = FieldWeakening(omega); </CODE>
-*
-*/
-float FieldWeakening(float omega, float vqRef)
-{
-    if(omega > END_SPEED_RADS_SEC_ELEC)
-    {
-        fdWeakParm.fwNum = sqrt(SquareFloat(EFFECTIVE_VOLATGE_FW/omega) - 
-                                SquareFloat(MOTOR_PER_PHASE_INDUCTANCE * 
-                                                vqRef * PEAK_CURRENT));
-
-        fdWeakParm.IdRef = ((-MOTOR_BEMF_CONSTANT_ELEC + fdWeakParm.fwNum) / 
-                                                  MOTOR_PER_PHASE_INDUCTANCE);
-
-        SaturateFloat(&fdWeakParm.IdRef, MAX_FW_NEGATIVE_ID_REF, 0.0f);
-
-        fdWeakParm.IdRef = (fdWeakParm.IdRef / PEAK_CURRENT);
-    }
-    else
-    {
-        fdWeakParm.IdRef = 0.0;
-    }
-    
-    return fdWeakParm.IdRef;
-}
+void MCAPP_MC1ServiceInit(void);
+void MCAPP_MC1InputBufferSet(uint8_t, uint8_t);
+int16_t MCAPP_MC1GetTargetVelocity(void);
 
 // </editor-fold>
+
+
+#ifdef	__cplusplus
+}
+#endif
+
+#endif	/* MC1_SERVICE_H */
+

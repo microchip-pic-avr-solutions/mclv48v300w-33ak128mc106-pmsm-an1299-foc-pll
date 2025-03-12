@@ -55,35 +55,39 @@ extern "C" {
 // <editor-fold defaultstate="collapsed" desc="HEADER FILES ">
 
 #include <stdint.h>
-
+    
+#include "singleshunt.h"    
+#include "mc1_user_params.h"
 // </editor-fold>
 
 // <editor-fold defaultstate="collapsed" desc="DEFINITIONS ">
 
 #define OFFSET_COUNT_BITS   (int16_t)10
 #define OFFSET_COUNT_MAX    (int16_t)(1 << OFFSET_COUNT_BITS)
-    
-#define OFFSET_COUNT_MOSFET_TEMP 4964
-/*MOSFET_TEMP_COEFF = 3.3V/(32767*0.01V)*/
-#define MOSFET_TEMP_COEFF Q15(0.010071108)    
-#define MOSFET_TEMP_AVG_FILTER_SCALE     8
-    
+
 // </editor-fold>
 
 // <editor-fold defaultstate="collapsed" desc="VARIABLE TYPE DEFINITIONS ">
 
 typedef struct
 {
+    float
+        Ia_actual,
+        Ib_actual,
+        Ic_actual;
+    
     int16_t
         offsetIa,       /* A phase current offset */
         offsetIb,       /* B phase current offset */
         offsetIbus,     /* BUS current offset */
         Ia,             /* A phase Current Feedback */
         Ib,             /* B phase Current Feedback */
-        Ibus,           /* BUS current Feedback */
+        Ibus,           /* Bus current Feedback */
+        Ibus1,          /* Bus Current 1 for Single Shunt during active vector 1 */
+        Ibus2,          /* Bus Current 2 for Single Shunt during active vector 2 */
         counter,        /* counter */
         status;         /* flag to indicate offset measurement completion */
-
+            
     int32_t
         sumIa,          /* Accumulation of Ia */
         sumIb,          /* Accumulation of Ib */
@@ -105,16 +109,38 @@ typedef struct
 
 typedef struct
 {
+    int16_t
+        count;              /* Measured DC Bus Voltage value in counts. */
+    
+    float
+        value;
+} MCAPP_MEASURE_VDC_T;
+
+typedef struct
+{
+    int16_t
+        Va,                 /* A phase terminal voltage w.r.t. DC_Neg */
+        Vb,                 /* B phase terminal voltage w.r.t. DC_Neg */
+        Vc,                 /* C phase terminal voltage w.r.t. DC_Neg */
+        status,             /* Status if phase voltages are available */
+        samplingFactor;     /* Ratio of sampling time to ADC interrupt */
+}MCAPP_MEASURE_PHASEVOLT_T;
+
+typedef struct
+{
     int16_t 
-        potValue;         /* Measure potentiometer */
-    int16_t
-        dcBusVoltage;
-    int16_t
-        MOSFETTemperatureAvg;  
-    MCAPP_MEASURE_AVG_T MOSFETTemperature;
+        sharedCoreChannelNumber,    /* Shared core channel number for switching */
+        measurePot;                 /* Measure potentiometer */
+    
     MCAPP_MEASURE_CURRENT_T
-        current;     /* Current measurement parameters */
-            
+        measureCurrent;             /* Current measurement parameters */
+        
+    MCAPP_MEASURE_VDC_T
+        measureVdc;                 /* DC Bus Sensing parameters */
+    
+    MCAPP_MEASURE_PHASEVOLT_T
+        measurePhaseVolt;           /* Phase voltage measurement parameters */
+    
 }MCAPP_MEASURE_T;
 
 // </editor-fold>
@@ -122,13 +148,12 @@ typedef struct
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
 void MCAPP_MeasureCurrentOffset (MCAPP_MEASURE_T *);
-void MCAPP_MeasureCurrentCalibrate (MCAPP_MEASURE_T *);
+void MCAPP_MeasureCurrentCalibrate (MCAPP_MEASURE_T *, SINGLE_SHUNT_PARM_T *);
 void MCAPP_MeasureCurrentInit (MCAPP_MEASURE_T *);
 int16_t MCAPP_MeasureCurrentOffsetStatus (MCAPP_MEASURE_T *);
-void MCAPP_MeasureTemperature(MCAPP_MEASURE_T *,int16_t );
+
 void MCAPP_MeasureAvgInit(MCAPP_MEASURE_AVG_T *,uint16_t );
 int16_t MCAPP_MeasureAvg(MCAPP_MEASURE_AVG_T *);
-
 // </editor-fold>
 
 #ifdef __cplusplus

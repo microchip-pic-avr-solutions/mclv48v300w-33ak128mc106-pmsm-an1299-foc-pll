@@ -54,49 +54,62 @@
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
 /**
-* <B> Function: MC_ControllerPIUpdate(MC_PIPARMIN_T *,MC_PISTATE_T *,
-*                                                       MC_PIPARMOUT_T *)  </B>
+* <B> Function: MC_ControllerPIUpdate(MC_PI_T *)  </B>
 *
 * @brief Function implementing PI Controller.
 *        
-* @param Pointer to the data structure containing PI Controller input.
-* @param Pointer to the data structure containing PI Controller state.
-* @param Pointer to the data structure containing PI Controller output.
+* @param Pointer to the data structure containing PI Controller inputs.
 * @return none.
 * 
 * @example
-* <CODE> MC_ControllerPIUpdate(&piInput,&piInputId.piState,&piOutputId); </CODE>
+* <CODE> MC_ControllerPIUpdate(&piInputId); </CODE>
 *
 */
-void MC_ControllerPIUpdate(MC_PIPARMIN_T *pPIParmInput,MC_PISTATE_T *pPIState,
-                                                 MC_PIPARMOUT_T *pPIParmOutput)
+void MC_ControllerPIUpdate(MC_PI_T *pPI)
 {
     float error;
-    float U;
-    float excess;
+    float outUnsat;
 
-    error  = pPIParmInput->inReference - pPIParmInput->inMeasure;
+    MC_PIPARAMS_T *pParam = &pPI->param;
+    MC_PISTATE_T *pstateVar= &pPI->stateVar;
+    
+    /* Parallel form implementation of PI controller */
+    error  = pPI->inReference - pPI->inMeasure;
+    
+    outUnsat  = pstateVar->integrator + pParam->kp * error ;
 
-    U  = pPIState->integrator + pPIState->kp * error ;
-
-    if( U > pPIState->outMax )
+    if( outUnsat > pParam->outMax )
     {
-        pPIParmOutput->out = pPIState->outMax;
+        pPI->output = pParam->outMax;
     }
-    else if( U < pPIState->outMin )
+    else if( outUnsat < pParam->outMin )
     {
-        pPIParmOutput->out = pPIState->outMin;
+        pPI->output = pParam->outMin;
     }
     else
     {
-        pPIParmOutput->out = U;
+        pstateVar->integrator = pstateVar->integrator + pParam->ki * error ;
+        pPI->output = outUnsat;
     }
-
-    excess = U - pPIParmOutput->out;
-    pPIState->integrator = pPIState->integrator +
-                           pPIState->ki * error -
-                           pPIState->kc * excess;
     
+}
+
+/**
+* <B> Function: MC_ControllerPIReset(MC_PI_T *, float)  </B>
+*
+* @brief Function to reset the integrator output from PI Controller.
+*        
+* @param Pointer to the data structure containing PI Controller inputs.
+* @param reset value
+* @return none.
+* 
+* @example
+* <CODE> MC_ControllerPIReset(&pFOC->piId, 0); </CODE>
+*
+*/
+void MC_ControllerPIReset(MC_PI_T *pPI, float resetValue)
+{
+    pPI->stateVar.integrator = resetValue;
 }
 
 // </editor-fold>

@@ -66,21 +66,21 @@
 /* Digital I/O definitions */
         
 /*Push buttons*/
-/* SW1 : DIM:034 -  Pin #49 : RP58/IOMF7/RD9 */
+/* SW1 : DIM:034 -  PIN #49 : RP58/IOMF7/RD9 */
 #define SW1                   PORTDbits.RD9
-/* SW2 : DIM:036 - PIN #50 : RP59/RD10  */
+/* SW2 : DIM:036 -  PIN #50 : RP59/RD10  */
 #define SW2                   PORTDbits.RD10
         
 /* Used as START/STOP button of Motor */
-#define BUTTON_START_STOP     SW1
-/* Used as Speed HALF/DOUBLE button of Motor */
-#define BUTTON_SPEED_HALF_DOUBLE        SW2	
+#define BUTTON_START_STOP              SW1
+/* Used as Direction Change button of Motor */
+#define BUTTON_DIRECTION_CHANGE        SW2	
 
 /* Debug LEDs */
-/* LED2(LD3) : DIM:032 - Pin #34 : RP42/IOMD10/SDO2/IOMF10/PCI19/RC9 */
-#define LED2                    LATCbits.LATC9
-/* LED1(LD2) : DIM:030 - Pin #55 : RP54/ASCL1/RD5 */
-#define LED1                    LATDbits.LATD5
+/* LED1(LD2) : DIM:030 - PIN #55 : RP54/ASCL1/RD5 */
+#define LED1                  LATDbits.LATD5
+/* LED2(LD3) : DIM:032 - PIN #34 : RP42/IOMD10/SDO2/IOMF10/PCI19/RC9 */
+#define LED2                  LATCbits.LATC9
 
 // </editor-fold>
 

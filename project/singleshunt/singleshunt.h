@@ -65,11 +65,11 @@ extern "C" {
 // <editor-fold defaultstate="expanded" desc="DEFINITIONS/CONSTANTS ">
 
 /*  Critical Minimum window in seconds to measure current through single shunt*/
-#define SSTCRIT_MICROSEC	3.0
+#define SSTCRIT_MICROSEC	2.5
 /*  Critical Minimum window in counts to measure current through single shunt*/
-#define SSTCRIT         (float)(SSTCRIT_MICROSEC*16*PWM_CLOCK_MHZ)
+#define SSTCRIT             (float)(SSTCRIT_MICROSEC*16*PWM_CLOCK_MHZ)
 /* Additional delay for ADC Trigger in counts of PWM Period */
-#define SS_SAMPLE_DELAY  0
+#define SS_SAMPLE_DELAY     0
 
 // </editor-fold>
 
@@ -91,7 +91,7 @@ typedef struct
     /* Variable indicating the active sector in which SVM is in. The Sector value 
      * is used to identify which duty cycle registers to be modified in order to 
      * measure current through single shunt */
-    int16_t sectorSVM;			
+    uint8_t sectorSVM;			
     /* variable used to create minimum window to measure the current through single 
      * shunt resistor when enabled */
     float tcrit;
@@ -112,8 +112,8 @@ typedef struct
     /* Variable holding the second trigger value to be stored in TRIG1 register 
      * to trigger A/D conversion  */
     float trigger2;       
-    MC_DUTYCYCLEOUT_T pwmDutycycle1;
-    MC_DUTYCYCLEOUT_T pwmDutycycle2;
+    MC_DUTYCYCLEOUT_T phase;
+    MC_DUTYCYCLEOUT_T pdc;
     
 } SINGLE_SHUNT_PARM_T;
 
@@ -123,14 +123,13 @@ typedef enum tagSSADCSAMPLE_STATE
     SS_SAMPLE_BUS2 = 1,     /* Bus Current Sample2 */   
      
 }SSADCSAMPLE_STATE;
-
-extern SINGLE_SHUNT_PARM_T singleShuntParam,singleShuntParam1;    
+   
 
 // </editor-fold>
    
 // <editor-fold defaultstate="expanded" desc="INTERFACE FUNCTIONS ">
 
-void SingleShunt_CalculateSpaceVectorPhaseShifted(MC_ABC_T *pABC,
+uint8_t SingleShunt_CalculateSpaceVectorPhaseShifted(MC_ABC_T *pABC,
                                                      float iPwmPeriod,
                                                      SINGLE_SHUNT_PARM_T *);
 void SingleShunt_PhaseCurrentReconstruction(SINGLE_SHUNT_PARM_T *);
